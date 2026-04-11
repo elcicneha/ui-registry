@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input",
+  "type": "registry:component",
+  "title": "Input",
+  "description": "An input component with exportable variants for composition.",
+  "dependencies": [
+    "class-variance-authority"
+  ],
+  "files": [
+    {
+      "path": "registry/new-york/blocks/input.tsx",
+      "content": "import * as React from \"react\"\nimport { cva } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst inputVariants = cva(\n  [\n    \"h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none\",\n    \"selection:bg-primary selection:text-primary-foreground\",\n    \"file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground\",\n    \"placeholder:text-muted-foreground\",\n    \"disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50\",\n    \"md:text-sm dark:bg-input/30\",\n    \"focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50\",\n    \"aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40\",\n  ],\n)\n\nfunction Input({ className, type, ...props }: React.ComponentProps<\"input\">) {\n  return (\n    <input\n      type={type}\n      data-slot=\"input\"\n      className={cn(inputVariants(), className)}\n      {...props}\n    />\n  )\n}\n\nexport { Input, inputVariants }\n",
+      "type": "registry:component"
+    }
+  ]
+}
