@@ -7,16 +7,23 @@ export default function ControlledExample() {
   const [value, setValue] = React.useState("")
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full max-w-xs">
       <InputPhone
         defaultCountry="US"
         value={value}
         onChange={setValue}
         placeholder="Phone number"
       />
-      {value && (
-        <p className="text-xs text-muted-foreground font-mono">{value}</p>
-      )}
+      <p className="text-center text-sm">
+        {value === "" ? (
+          "Enter your one-time password"
+        ) : (
+          <>
+            You entered:{" "}
+            <span className="font-mono font-medium text-foreground">{value}</span>
+          </>
+        )}
+      </p>
     </div>
   )
 }

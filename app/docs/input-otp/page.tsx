@@ -14,6 +14,9 @@ import BasicExample from "./examples/basic"
 import SeparatorExample from "./examples/separator"
 import DigitsOnlyExample from "./examples/digits-only"
 import DisabledExample from "./examples/disabled"
+import ControlledExample from "./examples/controlled"
+import InvalidExample from "./examples/invalid"
+import AlphanumericExample from "./examples/alphanumeric"
 
 const REGISTRY_NAME = "input-otp"
 const MANUAL_TARGET_PATH = "components/ui/input-otp.tsx"
@@ -158,12 +161,18 @@ export default async function InputOTPDocsPage() {
     separatorCode,
     digitsOnlyCode,
     disabledCode,
+    controlledCode,
+    invalidCode,
+    alphanumericCode,
   ] = await Promise.all([
     loadManualSource(),
     loadExampleSource("app/docs/input-otp/examples/basic.tsx"),
     loadExampleSource("app/docs/input-otp/examples/separator.tsx"),
     loadExampleSource("app/docs/input-otp/examples/digits-only.tsx"),
     loadExampleSource("app/docs/input-otp/examples/disabled.tsx"),
+    loadExampleSource("app/docs/input-otp/examples/controlled.tsx"),
+    loadExampleSource("app/docs/input-otp/examples/invalid.tsx"),
+    loadExampleSource("app/docs/input-otp/examples/alphanumeric.tsx"),
   ])
 
   return (
@@ -180,7 +189,7 @@ export default async function InputOTPDocsPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight">Input OTP</h1>
-            <p className="text-muted-foreground">
+            <p>
               A one-time password input with individually boxed character
               slots, as an alternative to shadcn&apos;s default joined
               pill-style OTP.
@@ -191,14 +200,14 @@ export default async function InputOTPDocsPage() {
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Preview</h2>
+        <h2 >Preview</h2>
         <ComponentPreview code={basicCode}>
           <BasicExample />
         </ComponentPreview>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Installation</h2>
+        <h2 >Installation</h2>
         <InstallSection
           name={REGISTRY_NAME}
           deps={NPM_DEPENDENCIES}
@@ -208,8 +217,8 @@ export default async function InputOTPDocsPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Composition</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 >Composition</h2>
+        <p>
           Use the following composition to build an{" "}
           <code>InputOTP</code>:
         </p>
@@ -217,7 +226,7 @@ export default async function InputOTPDocsPage() {
       </section>
 
       <section className="flex flex-col gap-8">
-        <h2 className="text-xl font-semibold tracking-tight">Examples</h2>
+        <h2>Examples</h2>
 
         <DocExample
           title="With separator"
@@ -242,27 +251,51 @@ export default async function InputOTPDocsPage() {
         >
           <DisabledExample />
         </DocExample>
+
+        <DocExample
+          title="Controlled"
+          description="Bind value and onChange to track the OTP in your own state. The live value is displayed below the input."
+          code={controlledCode}
+        >
+          <ControlledExample />
+        </DocExample>
+
+        <DocExample
+          title="Invalid"
+          description="Pass aria-invalid to each InputOTPSlot to show the error styles. Fill all six slots to see the destructive state."
+          code={invalidCode}
+        >
+          <InvalidExample />
+        </DocExample>
+
+        <DocExample
+          title="Alphanumeric"
+          description="Accept both letters and digits by passing the REGEXP_ONLY_DIGITS_AND_CHARS pattern. Special characters are rejected."
+          code={alphanumericCode}
+        >
+          <AlphanumericExample />
+        </DocExample>
       </section>
 
       <section className="flex flex-col gap-6">
-        <h2 className="text-xl font-semibold tracking-tight">API Reference</h2>
+        <h2>API Reference</h2>
 
         <div className="flex flex-col gap-3">
-          <h3 className="text-lg font-semibold tracking-tight">InputOTP</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3>InputOTP</h3>
+          <p >
             Root component. Accepts every prop from the underlying{" "}
-            <code className="font-mono text-xs">OTPInput</code> in{" "}
-            <code className="font-mono text-xs">input-otp</code> — the most
+            <code>OTPInput</code> in{" "}
+            <code>input-otp</code> — the most
             relevant are listed below.
           </p>
           <PropsTable rows={inputOTPProps} />
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3 className="text-lg font-semibold tracking-tight">
+          <h3>
             InputOTPSlot
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p >
             A single character slot. Renders the character, active ring, and
             blinking caret.
           </p>
@@ -270,22 +303,22 @@ export default async function InputOTPDocsPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3 className="text-lg font-semibold tracking-tight">
+          <h3>
             InputOTPGroup & InputOTPSeparator
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p>
             Layout helpers.{" "}
-            <code className="font-mono text-xs">InputOTPGroup</code> wraps
+            <code>InputOTPGroup</code> wraps
             related slots;{" "}
-            <code className="font-mono text-xs">InputOTPSeparator</code>{" "}
+            <code>InputOTPSeparator</code>{" "}
             renders a dot between groups. Both forward standard{" "}
-            <code className="font-mono text-xs">div</code> props.
+            <code>div</code> props.
           </p>
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Accessibility</h2>
+        <h2>Accessibility</h2>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li>
             Full keyboard navigation — typing, backspace, arrow keys, and
@@ -293,14 +326,14 @@ export default async function InputOTPDocsPage() {
           </li>
           <li>
             Slots expose{" "}
-            <code className="font-mono text-xs">data-active</code> for focus
+            <code>data-active</code> for focus
             state and honor{" "}
-            <code className="font-mono text-xs">aria-invalid</code> for error
+            <code>aria-invalid</code> for error
             styling.
           </li>
           <li>
             The separator is rendered with{" "}
-            <code className="font-mono text-xs">
+            <code>
               role=&quot;separator&quot;
             </code>{" "}
             so it is announced correctly.

@@ -41,9 +41,24 @@ There are two parallel consumers of the code under [registry/](registry/) and yo
 - [registry/new-york/ui/](registry/new-york/ui/) — shadcn primitives installed as-is via `pnpm shadcn add`. **Never modify files here.** These are the pristine upstream source. When a block needs a shadcn dependency, install it here and list it under `registryDependencies` in `registry.json`.
 - [components/ui/](components/ui/) — customized versions of shadcn primitives. If a shadcn primitive needs styling changes for this project, copy it here and modify it. Never change the version in `registry/new-york/ui/`.
 - [components/](components/) — app-only components (e.g. `OpenInV0Button`, `CodeBlock`, `ComponentPreview`, `InstallSection`) that are not distributed.
-- [app/docs/](app/docs/) — documentation pages. Each component gets its own subfolder: `app/docs/<name>/page.tsx` (server component, docs layout) and `app/docs/<name>/demos.tsx` (`"use client"`, interactive demo exports).
+- [app/docs/](app/docs/) — documentation pages. Each component gets its own subfolder: `app/docs/<name>/page.tsx` (server component, docs layout) and `app/docs/<name>/examples/*.tsx` (one file per demo variant, each a default-export React component).
 - [lib/utils.ts](lib/utils.ts) — `cn()` helper. Path alias `@/lib/utils` is the shadcn convention; preserve it in block source so generated JSON resolves correctly on consumers.
 - [public/r/](public/r/) — **generated output**. Do not hand-edit; regenerate via `pnpm registry:build`.
+
+### Global element styles
+
+`app/globals.css` defines base styles for several HTML elements via `@layer base`. Do not add equivalent classes directly on these elements — the global styles already apply:
+
+| Element | Global styles applied |
+|---|---|
+| `h2` | `text-xl font-semibold tracking-tight` |
+| `h3` | `text-lg font-semibold tracking-tight` |
+| `p` | `text-base text-muted-foreground` |
+| `code` (inline) | `rounded-sm bg-muted px-1.5 py-1 font-mono text-sm font-medium text-foreground/80` |
+| `code` (all) | `font-mono text-foreground/90` |
+| `kbd` | `rounded border px-1 py-0.5 font-mono text-xs` |
+
+Only `<div>` and `<span>` are free of global styles — add classes freely there. For all other elements, only add a class if it genuinely overrides the global (e.g. `text-sm` on a `<p>` when you explicitly want smaller-than-normal text).
 
 ### Styling rules
 
@@ -78,12 +93,12 @@ Complete every step in order. Do not consider the task done until all steps pass
 - Verify `public/r/<name>.json` appears. If it doesn't, check the `files[]` paths in `registry.json`.
 
 **4. Create the docs page**
-- Create `app/docs/<name>/demos.tsx` — `"use client"`, one named export per demo variant. Import from the block source path (`@/registry/new-york/blocks/<name>/<name>`). Each demo is a minimal, focused example of one prop or feature.
+- Create `app/docs/<name>/examples/*.tsx` — one file per demo variant (e.g. `basic.tsx`, `controlled.tsx`). Each file is a default-export React component. Import the block from `@/registry/new-york/blocks/<name>/<name>`. Keep each demo minimal and focused on one prop or feature. Add `"use client"` only when the demo needs state.
 - Create `app/docs/<name>/page.tsx` — async server component. Follow the structure from [app/docs/input-otp/page.tsx](app/docs/input-otp/page.tsx):
-  - Constants at the top: `REGISTRY_NAME`, `MANUAL_TARGET_PATH`, `REGISTRY_SOURCE_PATH`, `NPM_DEPENDENCIES`.
+  - Constants at the top: `REGISTRY_NAME`, `MANUAL_TARGET_PATH` (always `components/ui/<name>.tsx` — the path shown to consumers in the manual install step), `REGISTRY_SOURCE_PATH`, `NPM_DEPENDENCIES`.
   - `loadManualSource()` reads the block source file at `REGISTRY_SOURCE_PATH` for the manual install tab.
-  - Sections (in order): **Preview** (`ComponentPreview` wrapping the basic demo + `basicExampleCode` string), **Installation** (`InstallSection` with `name`, `deps`, `source`, `sourcePath`), **Composition** (only if the component has sub-components — render the component tree as a `CodeBlock` using a plain-text tree with `├──`/`│`/`└──` characters, **not JSX**; lead with `Use the following composition to build a <ComponentName>:`), **Examples** (one `ComponentPreview` per demo variant), **API Reference** (`PropsTable` for each exported component — define `PropsTable` inline in the page, copy from the OTP page), **Accessibility** (bullet list: keyboard behaviour, ARIA attributes used, screen-reader notes).
-  - All code example strings use the consumer import path (`@/components/ui/<name>`), not the registry source path.
+  - Load code strings with `loadExampleSource()` from `@/lib/docs` — it strips `"use client"` and rewrites internal registry imports to consumer-facing `@/components/ui/<name>` paths automatically. This means example `.tsx` files should import from `@/registry/new-york/blocks/<name>/<name>` (not from `@/components/ui/`); the rewrite happens at display time.
+  - Sections (in order): **Preview** (`ComponentPreview` wrapping the basic demo + its `loadExampleSource` string), **Installation** (`InstallSection` with `name`, `deps`, `source`, `sourcePath`), **Composition** (only if the component has sub-components — render the component tree as a `CodeBlock` using a plain-text tree with `├──`/`│`/`└──` characters, **not JSX**; lead with `Use the following composition to build a <ComponentName>:`), **Examples** (one `DocExample` per variant with `title`, `description`, `code`, and the rendered component as children), **API Reference** (`PropsTable` for each exported component — define `PropsTable` inline in the page, copy from the OTP page), **Accessibility** (bullet list: keyboard behaviour, ARIA attributes used, screen-reader notes).
   - Include a back link to `/` and `<OpenInV0Button name={REGISTRY_NAME} />` in the header.
 
 **5. Update [app/page.tsx](app/page.tsx)**

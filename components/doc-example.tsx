@@ -20,9 +20,9 @@ export function DocExample({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+        <h3>{title}</h3>
         {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p>{description}</p>
         )}
       </div>
       <ComponentPreview code={code}>{children}</ComponentPreview>

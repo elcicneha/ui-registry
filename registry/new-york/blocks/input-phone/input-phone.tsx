@@ -136,7 +136,7 @@ function CountrySelect({
             variant="ghost"
             disabled={disabled}
             className={cn(
-              "h-full rounded-none px-3 gap-1.5 text-sm font-normal",
+              "h-full rounded-none px-2.5 has-[>svg]:pl-2.5 has-[>svg]:pr-1.5 gap-1.5 text-sm font-normal",
               "focus-visible:ring-0 focus-visible:border-transparent focus-visible:ring-offset-0",
               isSingleCountry && "pointer-events-none cursor-default",
             )}
@@ -228,7 +228,7 @@ function CountrySelectOption({
 function FlagComponent({ country, countryName }: RPNInput.FlagProps) {
   const Flag = flags[country]
   return (
-    <span className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20 [&_svg:not([class*='size-'])]:size-full">
+    <span className="flex h-4 w-6 overflow-hidden rounded-xs bg-foreground/20 [&_svg:not([class*='size-'])]:size-full">
       {Flag && <Flag title={countryName} />}
     </span>
   )

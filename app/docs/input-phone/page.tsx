@@ -156,7 +156,7 @@ export default async function InputPhoneDocsPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight">Input Phone</h1>
-            <p className="text-muted-foreground">
+            <p>
               Phone number input with a searchable country picker, backed by{" "}
               <code className="font-mono text-sm">
                 react-phone-number-input
@@ -169,14 +169,14 @@ export default async function InputPhoneDocsPage() {
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Preview</h2>
+        <h2>Preview</h2>
         <ComponentPreview code={basicCode}>
           <BasicExample />
         </ComponentPreview>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Installation</h2>
+        <h2>Installation</h2>
         <InstallSection
           name={REGISTRY_NAME}
           deps={NPM_DEPENDENCIES}
@@ -186,16 +186,11 @@ export default async function InputPhoneDocsPage() {
       </section>
 
       <section className="flex flex-col gap-8">
-        <h2 className="text-xl font-semibold tracking-tight">Examples</h2>
+        <h2>Examples</h2>
 
         <DocExample
           title="Controlled"
-          description={<>Pass <code>value</code> and <code>onChange</code> to keep the
-            phone number in your own state. This lets you read the number at
-            any time — useful when you need to validate it, send it in a form,
-            or show it somewhere else on the page. The value you get back is
-            always in E.164 format (e.g. <code>+12025550123</code>), which is
-            the standard format for storing and sending phone numbers.</>}
+          description={<>Use the <code>value</code> and <code>onChange</code> props to control the input value.</>}
           code={controlledCode}
         >
           <ControlledExample />
@@ -204,7 +199,7 @@ export default async function InputPhoneDocsPage() {
         <DocExample
           title="Default country"
           description={<>Set the initially selected country with{" "}
-            <code className="font-mono text-xs">defaultCountry</code>. Users
+            <code>defaultCountry</code>. Users
             can still switch to any other country via the picker.</>}
           code={defaultCountryCode}
         >
@@ -223,18 +218,18 @@ export default async function InputPhoneDocsPage() {
       </section>
 
       <section className="flex flex-col gap-6">
-        <h2 className="text-xl font-semibold tracking-tight">API Reference</h2>
+        <h2>API Reference</h2>
 
         <div className="flex flex-col gap-3">
-          <h3 className="text-lg font-semibold tracking-tight">InputPhone</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3>InputPhone</h3>
+          <p>
             A single component that wraps{" "}
-            <code className="font-mono text-xs">react-phone-number-input</code>
+            <code>react-phone-number-input</code>
             . It accepts all props from{" "}
-            <code className="font-mono text-xs">RPNInput.Props</code> except{" "}
-            <code className="font-mono text-xs">onChange</code>, which is
+            <code>RPNInput.Props</code> except{" "}
+            <code>onChange</code>, which is
             re-typed to receive an E.164{" "}
-            <code className="font-mono text-xs">Value</code> string. The most
+            <code>Value</code> string. The most
             commonly used props are listed below.
           </p>
           <PropsTable rows={inputPhoneProps} />
@@ -242,32 +237,32 @@ export default async function InputPhoneDocsPage() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Accessibility</h2>
+        <h2>Accessibility</h2>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li>
             The country picker button is keyboard-focusable and opens a
             searchable{" "}
-            <code className="font-mono text-xs">Command</code> popover — type
+            <code>Command</code> popover — type
             to filter, use arrow keys to navigate, press{" "}
-            <kbd className="rounded border px-1 font-mono text-xs">Enter</kbd>{" "}
+            <kbd>Enter</kbd>{" "}
             to select.
           </li>
           <li>
             The outer wrapper uses a{" "}
-            <code className="font-mono text-xs">focus-within</code> ring so the
+            <code>focus-within</code> ring so the
             full control receives a visible focus indicator regardless of which
             inner element is focused.
           </li>
           <li>
             The wrapper forwards{" "}
-            <code className="font-mono text-xs">aria-invalid</code> for error
+            <code>aria-invalid</code> for error
             state styling — pair it with a visible error message associated via{" "}
-            <code className="font-mono text-xs">aria-describedby</code> on the
+            <code>aria-describedby</code> on the
             wrapping field.
           </li>
           <li>
             Country flags are rendered as SVGs with a{" "}
-            <code className="font-mono text-xs">title</code> attribute
+            <code>title</code> attribute
             containing the country name, so screen readers announce the current
             country selection.
           </li>

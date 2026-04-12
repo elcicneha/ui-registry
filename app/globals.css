@@ -143,11 +143,27 @@
     @apply bg-background text-foreground;
   }
 
+  h2 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-lg font-semibold tracking-tight;
+  }
+
+  p {
+    @apply text-base text-muted-foreground;
+  }
+
   code:not(pre code) {
-    @apply rounded-sm bg-muted px-1.5 py-1 font-mono text-xs font-medium text-foreground/80;
+    @apply rounded-sm bg-muted px-1.5 py-1 font-mono text-sm font-medium text-foreground/80;
   }
 
   code {
     @apply font-mono text-foreground/90;
+  }
+
+  kbd {
+    @apply rounded border px-1 py-0.5 font-mono text-xs;
   }
 }
