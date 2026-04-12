@@ -9,6 +9,7 @@ import { ComponentPreview } from "@/components/component-preview"
 import { DocExample } from "@/components/doc-example"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
+import { PropsTable, type PropRow } from "@/components/props-table"
 import { loadExampleSource } from "@/lib/docs"
 import BasicExample from "./examples/basic"
 import SeparatorExample from "./examples/separator"
@@ -38,13 +39,6 @@ const compositionCode = `InputOTP
 └── InputOTPGroup
     ├── InputOTPSlot
     └── InputOTPSlot`
-
-type PropRow = {
-  name: string
-  type: string
-  default?: string
-  description: string
-}
 
 const inputOTPProps: PropRow[] = [
   {
@@ -105,44 +99,6 @@ const inputOTPSlotProps: PropRow[] = [
   },
 ]
 
-function PropsTable({ rows }: { rows: PropRow[] }) {
-  return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left">
-          <tr>
-            <th className="px-4 py-2 font-medium">Prop</th>
-            <th className="px-4 py-2 font-medium">Type</th>
-            <th className="px-4 py-2 font-medium">Default</th>
-            <th className="px-4 py-2 font-medium">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr
-              key={row.name}
-              className={i === rows.length - 1 ? "" : "border-b"}
-            >
-              <td className="px-4 py-2 font-mono text-xs text-foreground">
-                {row.name}
-              </td>
-              <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
-                {row.type}
-              </td>
-              <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
-                {row.default ?? "—"}
-              </td>
-              <td className="px-4 py-2 text-muted-foreground">
-                {row.description}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
 async function loadManualSource() {
   try {
     return await fs.readFile(
@@ -188,14 +144,14 @@ export default async function InputOTPDocsPage() {
       <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Input OTP</h1>
+            <h1>Input OTP</h1>
             <p>
               A one-time password input with individually boxed character
               slots, as an alternative to shadcn&apos;s default joined
               pill-style OTP.
             </p>
           </div>
-          <OpenInV0Button name={REGISTRY_NAME} className="shrink-0" />
+          <OpenInV0Button name={REGISTRY_NAME} />
         </div>
       </header>
 
@@ -228,53 +184,55 @@ export default async function InputOTPDocsPage() {
       <section className="flex flex-col gap-8">
         <h2>Examples</h2>
 
-        <DocExample
-          title="With separator"
-          description="Split slots into groups with a visual separator."
-          code={separatorCode}
-        >
-          <SeparatorExample />
-        </DocExample>
+        <div className="flex flex-col gap-12">
+          <DocExample
+            title="With separator"
+            description="Split slots into groups with a visual separator."
+            code={separatorCode}
+          >
+            <SeparatorExample />
+          </DocExample>
 
-        <DocExample
-          title="Digits only"
-          description="Restrict input to numeric characters using the pattern prop."
-          code={digitsOnlyCode}
-        >
-          <DigitsOnlyExample />
-        </DocExample>
+          <DocExample
+            title="Digits only"
+            description="Restrict input to numeric characters using the pattern prop."
+            code={digitsOnlyCode}
+          >
+            <DigitsOnlyExample />
+          </DocExample>
 
-        <DocExample
-          title="Disabled"
-          description="Non-interactive state for read-only or loading contexts."
-          code={disabledCode}
-        >
-          <DisabledExample />
-        </DocExample>
+          <DocExample
+            title="Disabled"
+            description="Non-interactive state for read-only or loading contexts."
+            code={disabledCode}
+          >
+            <DisabledExample />
+          </DocExample>
 
-        <DocExample
-          title="Controlled"
-          description="Bind value and onChange to track the OTP in your own state. The live value is displayed below the input."
-          code={controlledCode}
-        >
-          <ControlledExample />
-        </DocExample>
+          <DocExample
+            title="Controlled"
+            description="Bind value and onChange to track the OTP in your own state. The live value is displayed below the input."
+            code={controlledCode}
+          >
+            <ControlledExample />
+          </DocExample>
 
-        <DocExample
-          title="Invalid"
-          description="Pass aria-invalid to each InputOTPSlot to show the error styles. Fill all six slots to see the destructive state."
-          code={invalidCode}
-        >
-          <InvalidExample />
-        </DocExample>
+          <DocExample
+            title="Invalid"
+            description="Pass aria-invalid to each InputOTPSlot to show the error styles. Fill all six slots to see the destructive state."
+            code={invalidCode}
+          >
+            <InvalidExample />
+          </DocExample>
 
-        <DocExample
-          title="Alphanumeric"
-          description="Accept both letters and digits by passing the REGEXP_ONLY_DIGITS_AND_CHARS pattern. Special characters are rejected."
-          code={alphanumericCode}
-        >
-          <AlphanumericExample />
-        </DocExample>
+          <DocExample
+            title="Alphanumeric"
+            description="Accept both letters and digits by passing the REGEXP_ONLY_DIGITS_AND_CHARS pattern. Special characters are rejected."
+            code={alphanumericCode}
+          >
+            <AlphanumericExample />
+          </DocExample>
+        </div>
       </section>
 
       <section className="flex flex-col gap-6">
@@ -319,7 +277,7 @@ export default async function InputOTPDocsPage() {
 
       <section className="flex flex-col gap-3">
         <h2>Accessibility</h2>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        <ul >
           <li>
             Full keyboard navigation — typing, backspace, arrow keys, and
             paste all work as expected.

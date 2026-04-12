@@ -51,6 +51,7 @@ There are two parallel consumers of the code under [registry/](registry/) and yo
 
 | Element | Global styles applied |
 |---|---|
+| `h1` | `text-3xl font-bold tracking-tight` |
 | `h2` | `text-xl font-semibold tracking-tight` |
 | `h3` | `text-lg font-semibold tracking-tight` |
 | `p` | `text-base text-muted-foreground` |

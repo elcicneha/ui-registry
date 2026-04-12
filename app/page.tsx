@@ -51,7 +51,7 @@ export default function Home() {
   return (
     <div className="mx-auto flex min-h-svh max-w-3xl flex-col gap-10 px-4 py-12">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Custom Registry</h1>
+        <h1>Custom Registry</h1>
         <p>
           A small collection of shadcn-compatible components, distributed via
           the shadcn CLI.
@@ -60,11 +60,12 @@ export default function Home() {
 
       <main className="flex flex-col gap-4">
 
-        <ul className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4" role="list">
           {items.map((item) => (
-            <li
+            <div
               key={item.name}
               className="group relative flex flex-col gap-4 rounded-lg border bg-card p-5 transition-colors hover:bg-accent/40"
+              role="listitem"
             >
               <div className="flex flex-col gap-1">
                 <Link
@@ -81,9 +82,9 @@ export default function Home() {
               <div className="flex min-h-[120px] items-center justify-center rounded-md border bg-background p-6">
                 {item.preview}
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </main>
     </div>
   )

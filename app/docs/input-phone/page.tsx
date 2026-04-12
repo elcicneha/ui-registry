@@ -8,6 +8,7 @@ import { ComponentPreview } from "@/components/component-preview"
 import { DocExample } from "@/components/doc-example"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
+import { PropsTable, type PropRow } from "@/components/props-table"
 import { loadExampleSource } from "@/lib/docs"
 import BasicExample from "./examples/basic"
 import ControlledExample from "./examples/controlled"
@@ -19,13 +20,6 @@ const MANUAL_TARGET_PATH = "components/ui/input-phone.tsx"
 const REGISTRY_SOURCE_PATH =
   "registry/new-york/blocks/input-phone/input-phone.tsx"
 const NPM_DEPENDENCIES = ["react-phone-number-input"]
-
-type PropRow = {
-  name: string
-  type: string
-  default?: string
-  description: string
-}
 
 const inputPhoneProps: PropRow[] = [
   {
@@ -78,44 +72,6 @@ const inputPhoneProps: PropRow[] = [
   },
 ]
 
-function PropsTable({ rows }: { rows: PropRow[] }) {
-  return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left">
-          <tr>
-            <th className="px-4 py-2 font-medium">Prop</th>
-            <th className="px-4 py-2 font-medium">Type</th>
-            <th className="px-4 py-2 font-medium">Default</th>
-            <th className="px-4 py-2 font-medium">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr
-              key={row.name}
-              className={i === rows.length - 1 ? "" : "border-b"}
-            >
-              <td className="px-4 py-2 font-mono text-xs text-foreground">
-                {row.name}
-              </td>
-              <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
-                {row.type}
-              </td>
-              <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
-                {row.default ?? "—"}
-              </td>
-              <td className="px-4 py-2 text-muted-foreground">
-                {row.description}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
 async function loadManualSource() {
   try {
     return await fs.readFile(
@@ -155,7 +111,7 @@ export default async function InputPhoneDocsPage() {
       <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Input Phone</h1>
+            <h1>Input Phone</h1>
             <p>
               Phone number input with a searchable country picker, backed by{" "}
               <code className="font-mono text-sm">
@@ -164,7 +120,7 @@ export default async function InputPhoneDocsPage() {
               . Outputs E.164 formatted values.
             </p>
           </div>
-          <OpenInV0Button name={REGISTRY_NAME} className="shrink-0" />
+          <OpenInV0Button name={REGISTRY_NAME} />
         </div>
       </header>
 
@@ -187,34 +143,35 @@ export default async function InputPhoneDocsPage() {
 
       <section className="flex flex-col gap-8">
         <h2>Examples</h2>
+        <div className="flex flex-col gap-12">
+          <DocExample
+            title="Controlled"
+            description={<>Use the <code>value</code> and <code>onChange</code> props to control the input value.</>}
+            code={controlledCode}
+          >
+            <ControlledExample />
+          </DocExample>
 
-        <DocExample
-          title="Controlled"
-          description={<>Use the <code>value</code> and <code>onChange</code> props to control the input value.</>}
-          code={controlledCode}
-        >
-          <ControlledExample />
-        </DocExample>
+          <DocExample
+            title="Default country"
+            description={<>Set the initially selected country with{" "}
+              <code>defaultCountry</code>. Users
+              can still switch to any other country via the picker.</>}
+            code={defaultCountryCode}
+          >
+            <DefaultCountryExample />
+          </DocExample>
 
-        <DocExample
-          title="Default country"
-          description={<>Set the initially selected country with{" "}
-            <code>defaultCountry</code>. Users
-            can still switch to any other country via the picker.</>}
-          code={defaultCountryCode}
-        >
-          <DefaultCountryExample />
-        </DocExample>
-
-        <DocExample
-          title="One country only"
-          description={<>Restrict the country picker to a single country by passing a
-            single-item array to the <code>countries</code> prop. The
-            country picker UI will not appear.</>}
-          code={oneCountryCode}
-        >
-          <OneCountryExample />
-        </DocExample>
+          <DocExample
+            title="One country only"
+            description={<>Restrict the country picker to a single country by passing a
+              single-item array to the <code>countries</code> prop. The
+              country picker UI will not appear.</>}
+            code={oneCountryCode}
+          >
+            <OneCountryExample />
+          </DocExample>
+        </div>
       </section>
 
       <section className="flex flex-col gap-6">
@@ -238,7 +195,7 @@ export default async function InputPhoneDocsPage() {
 
       <section className="flex flex-col gap-3">
         <h2>Accessibility</h2>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        <ul >
           <li>
             The country picker button is keyboard-focusable and opens a
             searchable{" "}
