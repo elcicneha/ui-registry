@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react"
 
 import { CodeBlock } from "@/components/code-block"
 import { ComponentPreview } from "@/components/component-preview"
+import { DocExample } from "@/components/doc-example"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
 import {
@@ -295,45 +296,29 @@ export default async function InputOTPDocsPage() {
       <section className="flex flex-col gap-8">
         <h2 className="text-xl font-semibold tracking-tight">Examples</h2>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold tracking-tight">
-              With separator
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Split slots into groups with a visual separator.
-            </p>
-          </div>
-          <ComponentPreview code={separatorExampleCode}>
-            <SeparatorDemo />
-          </ComponentPreview>
-        </div>
+        <DocExample
+          title="With separator"
+          description="Split slots into groups with a visual separator."
+          code={separatorExampleCode}
+        >
+          <SeparatorDemo />
+        </DocExample>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold tracking-tight">
-              Digits only
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Restrict input to numeric characters using the pattern prop.
-            </p>
-          </div>
-          <ComponentPreview code={digitsExampleCode}>
-            <DigitsOnlyDemo />
-          </ComponentPreview>
-        </div>
+        <DocExample
+          title="Digits only"
+          description="Restrict input to numeric characters using the pattern prop."
+          code={digitsExampleCode}
+        >
+          <DigitsOnlyDemo />
+        </DocExample>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold tracking-tight">Disabled</h3>
-            <p className="text-sm text-muted-foreground">
-              Non-interactive state for read-only or loading contexts.
-            </p>
-          </div>
-          <ComponentPreview code={disabledExampleCode}>
-            <DisabledDemo />
-          </ComponentPreview>
-        </div>
+        <DocExample
+          title="Disabled"
+          description="Non-interactive state for read-only or loading contexts."
+          code={disabledExampleCode}
+        >
+          <DisabledDemo />
+        </DocExample>
       </section>
 
       <section className="flex flex-col gap-6">

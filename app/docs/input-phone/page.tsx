@@ -6,6 +6,8 @@ import { ArrowLeft } from "lucide-react"
 
 import { CodeBlock } from "@/components/code-block"
 import { ComponentPreview } from "@/components/component-preview"
+import { DocExample } from "@/components/doc-example"
+
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
 import {
@@ -216,54 +218,38 @@ export default async function InputPhoneDocsPage() {
       <section className="flex flex-col gap-8">
         <h2 className="text-xl font-semibold tracking-tight">Examples</h2>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold tracking-tight">Controlled</h3>
-            <p className="text-sm text-muted-foreground">
-              Pass <code>value</code> and <code>onChange</code> to keep the
-              phone number in your own state. This lets you read the number at
-              any time — useful when you need to validate it, send it in a form,
-              or show it somewhere else on the page. The value you get back is
-              always in E.164 format (e.g. <code>+12025550123</code>), which is
-              the standard format for storing and sending phone numbers.
-            </p>
-          </div>
-          <ComponentPreview code={controlledExampleCode}>
-            <ControlledDemo />
-          </ComponentPreview>
-        </div>
+        <DocExample
+          title="Controlled"
+          description={<>Pass <code>value</code> and <code>onChange</code> to keep the
+            phone number in your own state. This lets you read the number at
+            any time — useful when you need to validate it, send it in a form,
+            or show it somewhere else on the page. The value you get back is
+            always in E.164 format (e.g. <code>+12025550123</code>), which is
+            the standard format for storing and sending phone numbers.</>}
+          code={controlledExampleCode}
+        >
+          <ControlledDemo />
+        </DocExample>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold tracking-tight">
-              Default country
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Set the initially selected country with{" "}
-              <code className="font-mono text-xs">defaultCountry</code>. Users
-              can still switch to any other country via the picker.
-            </p>
-          </div>
-          <ComponentPreview code={defaultCountryExampleCode}>
-            <DefaultCountryDemo />
-          </ComponentPreview>
-        </div>
+        <DocExample
+          title="Default country"
+          description={<>Set the initially selected country with{" "}
+            <code className="font-mono text-xs">defaultCountry</code>. Users
+            can still switch to any other country via the picker.</>}
+          code={defaultCountryExampleCode}
+        >
+          <DefaultCountryDemo />
+        </DocExample>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold tracking-tight">
-              One country only
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Restrict the country picker to a single country by passing a
-              single-item array to the <code>countries</code> prop. The
-              country picker UI will not appear.
-            </p>
-          </div>
-          <ComponentPreview code={oneCountryExampleCode}>
-            <OneCountryDemo />
-          </ComponentPreview>
-        </div>
+        <DocExample
+          title="One country only"
+          description={<>Restrict the country picker to a single country by passing a
+            single-item array to the <code>countries</code> prop. The
+            country picker UI will not appear.</>}
+          code={oneCountryExampleCode}
+        >
+          <OneCountryDemo />
+        </DocExample>
       </section>
 
       <section className="flex flex-col gap-6">
