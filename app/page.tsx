@@ -7,6 +7,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/registry/new-york/blocks/input-otp/input-otp"
+import { InputPhone } from "@/registry/new-york/blocks/input-phone/input-phone"
 
 type RegistryItem = {
   name: string
@@ -35,6 +36,14 @@ const items: RegistryItem[] = [
         </InputOTPGroup>
       </InputOTP>
     ),
+  },
+  {
+    name: "input-phone",
+    title: "Input Phone",
+    description:
+      "Phone number input with searchable country picker, backed by react-phone-number-input.",
+    href: "/docs/input-phone",
+    preview: <InputPhone placeholder="Phone number" />,
   },
 ]
 

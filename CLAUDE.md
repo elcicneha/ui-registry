@@ -37,20 +37,60 @@ There are two parallel consumers of the code under [registry/](registry/) and yo
 
 ### Directory roles
 
-- [registry/new-york/blocks/](registry/new-york/blocks/) — components distributed through the registry. These are what `registry.json` points at. A block can be a single `.tsx` file (e.g. [input.tsx](registry/new-york/blocks/input.tsx)) or a folder of related files (e.g. [input-otp/](registry/new-york/blocks/input-otp/)); match the folder structure to the paths declared in `registry.json`.
-- [registry/new-york/ui/](registry/new-york/ui/) — shadcn primitives (button, card, input, label, textarea) used *internally* by the gallery app itself. These are **not** currently published through `registry.json`; treat them as local app dependencies.
-- [components/](components/) — app-only components (e.g. `OpenInV0Button`) that are not distributed.
+- [registry/new-york/blocks/](registry/new-york/blocks/) — components distributed through the registry. These are what `registry.json` points at. A block can be a single `.tsx` file or a folder of related files (e.g. [input-otp/](registry/new-york/blocks/input-otp/), [input-phone/](registry/new-york/blocks/input-phone/)); match the folder structure to the paths declared in `registry.json`. **Prefer the folder form** — it's future-proof for multi-file blocks.
+- [registry/new-york/ui/](registry/new-york/ui/) — shadcn primitives installed as-is via `pnpm shadcn add`. **Never modify files here.** These are the pristine upstream source. When a block needs a shadcn dependency, install it here and list it under `registryDependencies` in `registry.json`.
+- [components/ui/](components/ui/) — customized versions of shadcn primitives. If a shadcn primitive needs styling changes for this project, copy it here and modify it. Never change the version in `registry/new-york/ui/`.
+- [components/](components/) — app-only components (e.g. `OpenInV0Button`, `CodeBlock`, `ComponentPreview`, `InstallSection`) that are not distributed.
+- [app/docs/](app/docs/) — documentation pages. Each component gets its own subfolder: `app/docs/<name>/page.tsx` (server component, docs layout) and `app/docs/<name>/demos.tsx` (`"use client"`, interactive demo exports).
 - [lib/utils.ts](lib/utils.ts) — `cn()` helper. Path alias `@/lib/utils` is the shadcn convention; preserve it in block source so generated JSON resolves correctly on consumers.
 - [public/r/](public/r/) — **generated output**. Do not hand-edit; regenerate via `pnpm registry:build`.
+
+### Styling rules
+
+**For registry block components** (`registry/new-york/blocks/`):
+- Self-contain all styles via `cn()` — inline every class, modelled on `registry/new-york/ui/input.tsx`. Never import `inputVariants` or styling utilities from sibling block files (distribution conflict).
+- Don't duplicate classes already applied by the component's default styles. Add `className` only when the new style is genuinely additive.
+- The wrapper pattern: a `<div>` with `focus-within:` ring owns the border/shadow for composite inputs. Inner `<input>` elements carry only content classes (no border/shadow/rounded).
+
+**For app-level usage** (components used in the docs/gallery, not distributed):
+- Do not add custom `className` overrides at the call site. If a component needs to look different, change the component file itself — not the usage.
+- Always confirm with the user before modifying any component in `components/` or `components/ui/`.
+- Never modify files in `registry/new-york/ui/` for any reason.
 
 ### Style / conventions baked into the template
 
 - `components.json` declares `style: "new-york"`, `baseColor: "neutral"`, Tailwind v4 with CSS variables, `rsc: true`, and the `@/` aliases (`components`, `ui`, `lib`, `utils`, `hooks`). New blocks should import via these aliases.
 - Existing blocks (see [registry/new-york/blocks/input.tsx](registry/new-york/blocks/input.tsx)) export a `cva`-based `*Variants` alongside the component so consumers can compose styles — follow that pattern when adding variants.
 
-## Adding a new registry item
+## Adding a new registry item — checklist
 
-1. Drop the source under `registry/new-york/blocks/<name>.tsx` or `registry/new-york/blocks/<name>/...`.
-2. Add an `items[]` entry to [registry.json](registry.json) with `name`, `type` (`registry:component` for blocks), `title`, `description`, any npm `dependencies`, and every source file in `files[]`.
-3. Run `pnpm registry:build` and verify a fresh `public/r/<name>.json` appears.
-4. (Optional) Add a preview section to [app/page.tsx](app/page.tsx) importing from the source path and include `<OpenInV0Button name="<name>" />`.
+Complete every step in order. Do not consider the task done until all steps pass.
+
+**1. Write the component source**
+- Place under `registry/new-york/blocks/<name>/<name>.tsx` (folder form preferred).
+- Self-contained: inline all base classes, no import of `inputVariants` from other blocks.
+- If a shadcn primitive is needed as a dependency (e.g. Popover, Command): install it with `pnpm shadcn add <primitive>` — it goes to `registry/new-york/ui/`. List it in `registryDependencies` in `registry.json`. Import it in the block as `@/registry/new-york/ui/<primitive>`.
+
+**2. Update [registry.json](registry.json)**
+- Add a new `items[]` entry: `name`, `type: "registry:component"`, `title`, `description`, `dependencies` (npm), `registryDependencies` (shadcn), `files[]`.
+
+**3. Run `pnpm registry:build`**
+- Verify `public/r/<name>.json` appears. If it doesn't, check the `files[]` paths in `registry.json`.
+
+**4. Create the docs page**
+- Create `app/docs/<name>/demos.tsx` — `"use client"`, one named export per demo variant. Import from the block source path (`@/registry/new-york/blocks/<name>/<name>`). Each demo is a minimal, focused example of one prop or feature.
+- Create `app/docs/<name>/page.tsx` — async server component. Follow the structure from [app/docs/input-otp/page.tsx](app/docs/input-otp/page.tsx):
+  - Constants at the top: `REGISTRY_NAME`, `MANUAL_TARGET_PATH`, `REGISTRY_SOURCE_PATH`, `NPM_DEPENDENCIES`.
+  - `loadManualSource()` reads the block source file at `REGISTRY_SOURCE_PATH` for the manual install tab.
+  - Sections (in order): **Preview** (`ComponentPreview` wrapping the basic demo + `basicExampleCode` string), **Installation** (`InstallSection` with `name`, `deps`, `source`, `sourcePath`), **Composition** (only if the component has sub-components — render the component tree as a `CodeBlock` using a plain-text tree with `├──`/`│`/`└──` characters, **not JSX**; lead with `Use the following composition to build a <ComponentName>:`), **Examples** (one `ComponentPreview` per demo variant), **API Reference** (`PropsTable` for each exported component — define `PropsTable` inline in the page, copy from the OTP page), **Accessibility** (bullet list: keyboard behaviour, ARIA attributes used, screen-reader notes).
+  - All code example strings use the consumer import path (`@/components/ui/<name>`), not the registry source path.
+  - Include a back link to `/` and `<OpenInV0Button name={REGISTRY_NAME} />` in the header.
+
+**5. Update [app/page.tsx](app/page.tsx)**
+- Import the component from its block source path.
+- Add a new entry to the `items` array with `name`, `title`, `description`, `href: "/docs/<name>"`, and a `preview` JSX node.
+
+**6. Verify `pnpm build` passes**
+- Fix any TypeScript or import errors before marking the task complete.
+
+**7. Append a [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) entry** (for non-trivial architectural choices only).

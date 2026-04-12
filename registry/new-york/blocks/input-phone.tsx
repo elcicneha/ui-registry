@@ -2,10 +2,9 @@ import * as React from "react";
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
-import { inputVariants } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/registry/new-york/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,14 +12,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Input } from "./input";
+} from "@/registry/new-york/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/registry/new-york/ui/popover";
+import { ScrollArea } from "@/registry/new-york/ui/scroll-area";
 
 type InputPhoneProps = Omit<
   React.ComponentProps<"input">,
@@ -72,11 +70,14 @@ const InputComponent = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<"input">
 >(({ className, ...props }, ref) => (
-  <Input
+  <input
     className={cn(
-      "rounded-s-none border-r-0 border-y-0 tracking-wide",
-      "focus-visible:border-ring focus-visible:ring-[0px]",
-      className)}
+      "flex-1 min-w-0 bg-transparent px-3 py-1 text-base outline-none",
+      "placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
+      "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+      "md:text-sm tracking-wide",
+      className,
+    )}
     {...props}
     ref={ref}
   />
@@ -116,7 +117,6 @@ const CountrySelect = ({
           type="button"
           variant="outline"
           className={cn(
-            inputVariants({ size: "default" }),
             "flex gap-1.5 w-fit shrink-0 h-auto rounded-e-none border-none pointer-events-none",
           )}
           disabled={disabled}
@@ -214,7 +214,7 @@ const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
   const Flag = flags[country];
 
   return (
-    <span className="flex h-4 w-6 overflow-hidden rounded-xs bg-foreground/20 [&_svg:not([class*='size-'])]:size-full">
+    <span className="flex size-6 overflow-hidden rounded-xs bg-foreground/20 [&_svg:not([class*='size-'])]:size-full">
       {Flag && <Flag title={countryName} />}
     </span>
   );

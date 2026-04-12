@@ -4,6 +4,25 @@ A running log of architectural and product decisions. Each entry: what we decide
 
 ---
 
+## 2026-04-12 — `input-phone` architecture
+
+**Decision.** Single file at `registry/new-york/blocks/input-phone/input-phone.tsx`, backed by `react-phone-number-input`. Country picker uses a ghost `Button` (with `ChevronsUpDown` icon, matching the visual of a Select trigger) + `Popover` + `Command` + `ScrollArea` for a searchable dropdown. Styling is fully self-contained — no import of `inputVariants` from `blocks/input.tsx`. All new shadcn primitives (popover, command, scroll-area, button, dialog) live in `registry/new-york/ui/` following the existing pattern; not in `components/ui/`.
+
+**Context.** Needed a phone input that fits the registry's standalone philosophy: installable without side effects on other components. The wrapping `<div>` owns the border, shadow, and `focus-within:` ring so both the country trigger and the number field share a single unified focus state. The inner `<input>` (via `inputComponent` prop) inlines its own content classes, modelled on `registry/new-york/ui/input.tsx` but not imported from it.
+
+**Options considered.**
+- **A. Native `<select>` with opacity-0 overlay over a styled trigger.** Zero dependencies, keyboard/mobile native, screen-reader friendly. Rejected in favor of B because it loses the searchable filter UX for 200+ countries.
+- **B. `Button` + `Popover` + `Command` + `ScrollArea` (chosen).** Full search/filter, consistent with shadcn design language, composable. The `Button` visual is styled to match shadcn's `SelectTrigger` (ghost variant, `ChevronsUpDown` icon, same height).
+- **C. shadcn `Select` component.** Cleaner API but Radix `Select` doesn't support search/filter natively; wiring its controlled value into `react-phone-number-input`'s `countrySelectComponent` API is awkward.
+
+**Why.** The `react-phone-number-input` library handles the genuinely hard parts (E.164 parsing, AsYouType formatting, full country metadata, smart caret) so the component stays focused on presentation. The `Button` + `Popover` + `Command` combo is the established shadcn pattern for searchable selects and keeps the experience consistent with other pickers in the ecosystem.
+
+**Still open.** A custom no-library version (zero deps, inline country list, emoji flags) remains deferred. Would be useful as a lighter alternative for projects that don't need full E.164 validation. Revisit if there's demand.
+
+**Related files.** `blocks/input-phone/input-phone.tsx` (canonical), `registry/new-york/ui/popover.tsx`, `registry/new-york/ui/command.tsx`, `registry/new-york/ui/scroll-area.tsx`, `registry/new-york/ui/dialog.tsx` (added as dependencies).
+
+---
+
 ## 2026-04-11 — `input-otp` ships standalone, not as part of an input system
 
 **Decision.** `input-otp` inlines its base classes directly, has no `registryDependencies`, and does not import `inputVariants` from our custom `input.tsx`. It's a drop-in alternative to shadcn's joined pill-style OTP, installable without disturbing anything else in the user's project.

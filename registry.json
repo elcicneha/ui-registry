@@ -28,6 +28,20 @@
           "type": "registry:component"
         }
       ]
+    },
+    {
+      "name": "input-phone",
+      "type": "registry:component",
+      "title": "Input Phone",
+      "description": "Phone number input with searchable country picker, backed by react-phone-number-input.",
+      "dependencies": ["react-phone-number-input"],
+      "registryDependencies": ["button", "popover", "command", "scroll-area"],
+      "files": [
+        {
+          "path": "registry/new-york/blocks/input-phone/input-phone.tsx",
+          "type": "registry:component"
+        }
+      ]
     }
   ]
 }
