@@ -9,19 +9,17 @@ import { ComponentPreview } from "@/components/component-preview"
 import { DocExample } from "@/components/doc-example"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
-import {
-  BasicDemo,
-  DigitsOnlyDemo,
-  DisabledDemo,
-  SeparatorDemo,
-} from "./demos"
+import { loadExampleSource } from "@/lib/docs"
+import BasicExample from "./examples/basic"
+import SeparatorExample from "./examples/separator"
+import DigitsOnlyExample from "./examples/digits-only"
+import DisabledExample from "./examples/disabled"
 
 const REGISTRY_NAME = "input-otp"
 const MANUAL_TARGET_PATH = "components/ui/input-otp.tsx"
 const REGISTRY_SOURCE_PATH =
   "registry/new-york/blocks/input-otp/input-otp.tsx"
 const NPM_DEPENDENCIES = ["input-otp"]
-
 
 const compositionCode = `InputOTP
 ├── InputOTPGroup
@@ -37,93 +35,6 @@ const compositionCode = `InputOTP
 └── InputOTPGroup
     ├── InputOTPSlot
     └── InputOTPSlot`
-
-const basicExampleCode = `import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp"
-
-export function Example() {
-  return (
-    <InputOTP maxLength={6}>
-      <InputOTPGroup>
-        <InputOTPSlot index={0} />
-        <InputOTPSlot index={1} />
-        <InputOTPSlot index={2} />
-        <InputOTPSlot index={3} />
-        <InputOTPSlot index={4} />
-        <InputOTPSlot index={5} />
-      </InputOTPGroup>
-    </InputOTP>
-  )
-}`
-
-const separatorExampleCode = `import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@/components/ui/input-otp"
-
-export function Example() {
-  return (
-    <InputOTP maxLength={6}>
-      <InputOTPGroup>
-        <InputOTPSlot index={0} />
-        <InputOTPSlot index={1} />
-        <InputOTPSlot index={2} />
-      </InputOTPGroup>
-      <InputOTPSeparator />
-      <InputOTPGroup>
-        <InputOTPSlot index={3} />
-        <InputOTPSlot index={4} />
-        <InputOTPSlot index={5} />
-      </InputOTPGroup>
-    </InputOTP>
-  )
-}`
-
-const digitsExampleCode = `import { REGEXP_ONLY_DIGITS } from "input-otp"
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp"
-
-export function Example() {
-  return (
-    <InputOTP maxLength={4} pattern={REGEXP_ONLY_DIGITS}>
-      <InputOTPGroup>
-        <InputOTPSlot index={0} />
-        <InputOTPSlot index={1} />
-        <InputOTPSlot index={2} />
-        <InputOTPSlot index={3} />
-      </InputOTPGroup>
-    </InputOTP>
-  )
-}`
-
-const disabledExampleCode = `import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp"
-
-export function Example() {
-  return (
-    <InputOTP maxLength={6} disabled>
-      <InputOTPGroup>
-        <InputOTPSlot index={0} />
-        <InputOTPSlot index={1} />
-        <InputOTPSlot index={2} />
-        <InputOTPSlot index={3} />
-        <InputOTPSlot index={4} />
-        <InputOTPSlot index={5} />
-      </InputOTPGroup>
-    </InputOTP>
-  )
-}`
 
 type PropRow = {
   name: string
@@ -241,7 +152,19 @@ async function loadManualSource() {
 }
 
 export default async function InputOTPDocsPage() {
-  const manualSource = await loadManualSource()
+  const [
+    manualSource,
+    basicCode,
+    separatorCode,
+    digitsOnlyCode,
+    disabledCode,
+  ] = await Promise.all([
+    loadManualSource(),
+    loadExampleSource("app/docs/input-otp/examples/basic.tsx"),
+    loadExampleSource("app/docs/input-otp/examples/separator.tsx"),
+    loadExampleSource("app/docs/input-otp/examples/digits-only.tsx"),
+    loadExampleSource("app/docs/input-otp/examples/disabled.tsx"),
+  ])
 
   return (
     <div className="mx-auto flex min-h-svh max-w-3xl flex-col gap-12 px-4 py-10">
@@ -269,8 +192,8 @@ export default async function InputOTPDocsPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold tracking-tight">Preview</h2>
-        <ComponentPreview code={basicExampleCode}>
-          <BasicDemo />
+        <ComponentPreview code={basicCode}>
+          <BasicExample />
         </ComponentPreview>
       </section>
 
@@ -299,25 +222,25 @@ export default async function InputOTPDocsPage() {
         <DocExample
           title="With separator"
           description="Split slots into groups with a visual separator."
-          code={separatorExampleCode}
+          code={separatorCode}
         >
-          <SeparatorDemo />
+          <SeparatorExample />
         </DocExample>
 
         <DocExample
           title="Digits only"
           description="Restrict input to numeric characters using the pattern prop."
-          code={digitsExampleCode}
+          code={digitsOnlyCode}
         >
-          <DigitsOnlyDemo />
+          <DigitsOnlyExample />
         </DocExample>
 
         <DocExample
           title="Disabled"
           description="Non-interactive state for read-only or loading contexts."
-          code={disabledExampleCode}
+          code={disabledCode}
         >
-          <DisabledDemo />
+          <DisabledExample />
         </DocExample>
       </section>
 

@@ -43,7 +43,7 @@ const items: RegistryItem[] = [
     description:
       "Phone number input with searchable country picker, backed by react-phone-number-input.",
     href: "/docs/input-phone",
-    preview: <InputPhone placeholder="Phone number" />,
+    preview: <InputPhone defaultCountry="US" placeholder="Phone number" />,
   },
 ]
 

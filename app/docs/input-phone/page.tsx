@@ -4,63 +4,21 @@ import path from "node:path"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
-import { CodeBlock } from "@/components/code-block"
 import { ComponentPreview } from "@/components/component-preview"
 import { DocExample } from "@/components/doc-example"
-
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
-import {
-  BasicDemo,
-  ControlledDemo,
-  DefaultCountryDemo,
-  OneCountryDemo,
-} from "./demos"
+import { loadExampleSource } from "@/lib/docs"
+import BasicExample from "./examples/basic"
+import ControlledExample from "./examples/controlled"
+import DefaultCountryExample from "./examples/default-country"
+import OneCountryExample from "./examples/one-country"
 
 const REGISTRY_NAME = "input-phone"
 const MANUAL_TARGET_PATH = "components/ui/input-phone.tsx"
 const REGISTRY_SOURCE_PATH =
   "registry/new-york/blocks/input-phone/input-phone.tsx"
 const NPM_DEPENDENCIES = ["react-phone-number-input"]
-
-const basicExampleCode = `import { InputPhone } from "@/components/ui/input-phone"
-
-export function Example() {
-  return <InputPhone defaultCountry="US" placeholder="Phone number" />
-}`
-
-const controlledExampleCode = `import * as React from "react"
-import { InputPhone } from "@/components/ui/input-phone"
-
-export function Example() {
-  const [value, setValue] = React.useState("")
-
-  return (
-    <div className="flex flex-col gap-2">
-      <InputPhone
-        defaultCountry="US"
-        value={value}
-        onChange={setValue}
-        placeholder="Phone number"
-      />
-      {value && (
-        <p className="text-xs text-muted-foreground font-mono">{value}</p>
-      )}
-    </div>
-  )
-}`
-
-const oneCountryExampleCode = `import { InputPhone } from "@/components/ui/input-phone"
-
-export function Example() {
-  return <InputPhone country="US" placeholder="Phone number" />
-}`
-
-const defaultCountryExampleCode = `import { InputPhone } from "@/components/ui/input-phone"
-
-export function Example() {
-  return <InputPhone defaultCountry="GB" placeholder="Phone number" />
-}`
 
 type PropRow = {
   name: string
@@ -170,7 +128,19 @@ async function loadManualSource() {
 }
 
 export default async function InputPhoneDocsPage() {
-  const manualSource = await loadManualSource()
+  const [
+    manualSource,
+    basicCode,
+    controlledCode,
+    defaultCountryCode,
+    oneCountryCode,
+  ] = await Promise.all([
+    loadManualSource(),
+    loadExampleSource("app/docs/input-phone/examples/basic.tsx"),
+    loadExampleSource("app/docs/input-phone/examples/controlled.tsx"),
+    loadExampleSource("app/docs/input-phone/examples/default-country.tsx"),
+    loadExampleSource("app/docs/input-phone/examples/one-country.tsx"),
+  ])
 
   return (
     <div className="mx-auto flex min-h-svh max-w-3xl flex-col gap-12 px-4 py-10">
@@ -200,8 +170,8 @@ export default async function InputPhoneDocsPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold tracking-tight">Preview</h2>
-        <ComponentPreview code={basicExampleCode}>
-          <BasicDemo />
+        <ComponentPreview code={basicCode}>
+          <BasicExample />
         </ComponentPreview>
       </section>
 
@@ -226,9 +196,9 @@ export default async function InputPhoneDocsPage() {
             or show it somewhere else on the page. The value you get back is
             always in E.164 format (e.g. <code>+12025550123</code>), which is
             the standard format for storing and sending phone numbers.</>}
-          code={controlledExampleCode}
+          code={controlledCode}
         >
-          <ControlledDemo />
+          <ControlledExample />
         </DocExample>
 
         <DocExample
@@ -236,9 +206,9 @@ export default async function InputPhoneDocsPage() {
           description={<>Set the initially selected country with{" "}
             <code className="font-mono text-xs">defaultCountry</code>. Users
             can still switch to any other country via the picker.</>}
-          code={defaultCountryExampleCode}
+          code={defaultCountryCode}
         >
-          <DefaultCountryDemo />
+          <DefaultCountryExample />
         </DocExample>
 
         <DocExample
@@ -246,9 +216,9 @@ export default async function InputPhoneDocsPage() {
           description={<>Restrict the country picker to a single country by passing a
             single-item array to the <code>countries</code> prop. The
             country picker UI will not appear.</>}
-          code={oneCountryExampleCode}
+          code={oneCountryCode}
         >
-          <OneCountryDemo />
+          <OneCountryExample />
         </DocExample>
       </section>
 
