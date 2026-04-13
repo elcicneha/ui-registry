@@ -8,6 +8,8 @@ A custom shadcn component registry built on the shadcn registry template. Compon
 
 Stack: Next.js 15 (App Router, Turbopack), React 19, Tailwind CSS v4, TypeScript, pnpm.
 
+Fonts: DM Sans (`--font-sans`, body text) and Instrument Serif (`--font-display`, homepage hero). Both loaded via `next/font/google` in `app/layout.tsx`.
+
 ## Commands
 
 ```bash
@@ -19,7 +21,11 @@ pnpm registry:build   # shadcn build — compiles registry.json → public/r/*.j
 
 There is no test runner configured in this repo.
 
-`NEXT_PUBLIC_BASE_URL` must be set for the "Open in v0" button to produce a working URL — it embeds `${NEXT_PUBLIC_BASE_URL}/r/<name>.json` into the v0 deeplink (see [components/open-in-v0-button.tsx:19](components/open-in-v0-button.tsx#L19)).
+`NEXT_PUBLIC_BASE_URL` must be set for the "Open in v0" button to produce a working URL — it embeds `${NEXT_PUBLIC_BASE_URL}/r/<name>.json` into the v0 deeplink (see [components/open-in-v0-button.tsx:19](components/open-in-v0-button.tsx#L19)). Falls back to `VERCEL_PROJECT_PRODUCTION_URL` or `VERCEL_URL` when deployed to Vercel (see [lib/registry.ts](lib/registry.ts)).
+
+### Dark mode
+
+Custom implementation — no `next-themes`. A blocking `<script>` in `app/layout.tsx` reads `localStorage('theme')` or `prefers-color-scheme` and adds/removes `.dark` on `<html>` before first paint (prevents flash). React state syncs via the `Providers` context in [app/providers.tsx](app/providers.tsx), which exports `useTheme()` → `{ theme, toggleTheme }`. Tailwind's dark variant is configured as `@custom-variant dark (&:is(.dark *))` in `globals.css`.
 
 ## Design decisions log
 
@@ -41,8 +47,13 @@ There are two parallel consumers of the code under [registry/](registry/) and yo
 - [registry/new-york/ui/](registry/new-york/ui/) — shadcn primitives installed as-is via `pnpm shadcn add`. **Never modify files here.** These are the pristine upstream source. When a block needs a shadcn dependency, install it here and list it under `registryDependencies` in `registry.json`.
 - [components/ui/](components/ui/) — customized versions of shadcn primitives. If a shadcn primitive needs styling changes for this project, copy it here and modify it. Never change the version in `registry/new-york/ui/`.
 - [components/](components/) — app-only components (e.g. `OpenInV0Button`, `CodeBlock`, `ComponentPreview`, `InstallSection`) that are not distributed.
-- [app/docs/](app/docs/) — documentation pages. Each component gets its own subfolder: `app/docs/<name>/page.tsx` (server component, docs layout) and `app/docs/<name>/examples/*.tsx` (one file per demo variant, each a default-export React component).
-- [lib/utils.ts](lib/utils.ts) — `cn()` helper. Path alias `@/lib/utils` is the shadcn convention; preserve it in block source so generated JSON resolves correctly on consumers.
+- [app/docs/](app/docs/) — documentation pages. Each component gets its own subfolder: `app/docs/<name>/page.tsx` (server component, docs layout) and `app/docs/<name>/examples/*.tsx` (one file per demo variant, each a default-export React component). Three-column layout: sidebar (`DocsSidebar`), content (max-w-2xl), TOC (`DocToc` with IntersectionObserver heading tracking). Sidebars hide on mobile.
+- [app/preview/\[name\]/](app/preview/%5Bname%5D/page.tsx) — dynamic route that renders a bare component (no header/footer) for Playwright screenshot capture. Has a `previews` map that must be kept in sync when adding components.
+- [app/about/](app/about/) — personal about page (not part of the registry).
+- [lib/utils.ts](lib/utils.ts) — `cn()` helper (`clsx` + `tailwind-merge`). Path alias `@/lib/utils` is the shadcn convention; preserve it in block source so generated JSON resolves correctly on consumers.
+- [lib/registry-items.ts](lib/registry-items.ts) — the central list of components shown on the homepage and sidebar. Each entry has `name`, `title`, `description`, `href`, optional `status` (`"new"` | `"stable"` | `"beta"`), and optional `imageFit` (`"contain"` | `"cover"`). **When adding a new component, add an entry here** (this is what step 5 in the checklist refers to for `app/page.tsx`, which reads from this file).
+- [lib/registry.ts](lib/registry.ts) — `baseUrl` resolution and `makeCliCommands(name)` / `makeDepsCommands(packages)` for generating per-package-manager install commands shown on doc pages.
+- [lib/docs.ts](lib/docs.ts) — `loadExampleSource(filePath)` reads example files at build time, strips `"use client"`, and rewrites `@/registry/new-york/blocks/<name>/...` imports to consumer-facing `@/components/ui/<name>` paths.
 - [public/r/](public/r/) — **generated output**. Do not hand-edit; regenerate via `pnpm registry:build`.
 
 ### Global element styles
@@ -52,12 +63,15 @@ There are two parallel consumers of the code under [registry/](registry/) and yo
 | Element | Global styles applied |
 |---|---|
 | `h1` | `text-3xl font-bold tracking-tight` |
-| `h2` | `text-xl font-semibold tracking-tight` |
-| `h3` | `text-lg font-semibold tracking-tight` |
+| `h2` | `text-xl font-semibold tracking-tight scroll-mt-20` |
+| `h3` | `text-lg font-semibold tracking-tight scroll-mt-20` |
 | `p` | `text-base text-muted-foreground` |
+| `ul` | `list-disc space-y-1 pl-5 text-sm text-muted-foreground` |
 | `code` (inline) | `rounded-sm bg-muted px-1.5 py-1 font-mono text-sm font-medium text-foreground/80` |
 | `code` (all) | `font-mono text-foreground/90` |
 | `kbd` | `rounded border px-1 py-0.5 font-mono text-xs` |
+
+There is also a `.display-h1` utility class (`font-display animate-fade-up text-4xl font-normal leading-tight tracking-tight`) used only on the homepage hero.
 
 Only `<div>` and `<span>` are free of global styles — add classes freely there. For all other elements, only add a class if it genuinely overrides the global (e.g. `text-sm` on a `<p>` when you explicitly want smaller-than-normal text).
 
@@ -94,16 +108,10 @@ Complete every step in order. Do not consider the task done until all steps pass
 - Verify `public/r/<name>.json` appears. If it doesn't, check the `files[]` paths in `registry.json`.
 
 **4. Create the docs page**
-- Create `app/docs/<name>/examples/*.tsx` — one file per demo variant (e.g. `basic.tsx`, `controlled.tsx`). Each file is a default-export React component. Import the block from `@/registry/new-york/blocks/<name>/<name>`. Keep each demo minimal and focused on one prop or feature. Add `"use client"` only when the demo needs state.
-- Create `app/docs/<name>/page.tsx` — async server component. Follow the structure from [app/docs/input-otp/page.tsx](app/docs/input-otp/page.tsx):
-  - Constants at the top: `REGISTRY_NAME`, `MANUAL_TARGET_PATH` (always `components/ui/<name>.tsx` — the path shown to consumers in the manual install step), `REGISTRY_SOURCE_PATH`, `NPM_DEPENDENCIES`.
-  - `loadManualSource()` reads the block source file at `REGISTRY_SOURCE_PATH` for the manual install tab.
-  - Load code strings with `loadExampleSource()` from `@/lib/docs` — it strips `"use client"` and rewrites internal registry imports to consumer-facing `@/components/ui/<name>` paths automatically. This means example `.tsx` files should import from `@/registry/new-york/blocks/<name>/<name>` (not from `@/components/ui/`); the rewrite happens at display time.
-  - Sections (in order): **Preview** (`ComponentPreview` wrapping the basic demo + its `loadExampleSource` string), **Installation** (`InstallSection` with `name`, `deps`, `source`, `sourcePath`), **Composition** (only if the component has sub-components — render the component tree as a `CodeBlock` using a plain-text tree with `├──`/`│`/`└──` characters, **not JSX**; lead with `Use the following composition to build a <ComponentName>:`), **Examples** (one `DocExample` per variant with `title`, `description`, `code`, and the rendered component as children), **API Reference** (`PropsTable` for each exported component — define `PropsTable` inline in the page, copy from the OTP page), **Accessibility** (bullet list: keyboard behaviour, ARIA attributes used, screen-reader notes).
-  - Include a back link to `/` and `<OpenInV0Button name={REGISTRY_NAME} />` in the header.
+- Follow the detailed instructions in [DOC_PAGES.md](DOC_PAGES.md) — it covers file structure, example files, page layout, required sections, and the reference implementation.
 
-**5. Update [app/page.tsx](app/page.tsx)**
-- Add a new entry to the `items` array with `name`, `title`, `description`, and `href: "/docs/<name>"`. No `preview` field — the image is derived from `name` automatically.
+**5. Update [lib/registry-items.ts](lib/registry-items.ts)**
+- Add a new entry to the `registryItems` array with `name`, `title`, `description`, and `href: "/docs/<name>"`. Optionally set `status` (`"new"`, `"stable"`, `"beta"`) and `imageFit` (`"contain"` default, or `"cover"` for tall previews). The homepage ([app/page.tsx](app/page.tsx)) and sidebar ([components/docs-sidebar.tsx](components/docs-sidebar.tsx)) both read from this array.
 
 **5a. Register the preview route**
 - Open [app/preview/[name]/page.tsx](app/preview/%5Bname%5D/page.tsx) and add the new component to the `previews` map (import its `basic.tsx` and add a `"<name>": ComponentBasic` entry).
@@ -121,9 +129,10 @@ Complete every step in order. Do not consider the task done until all steps pass
 
 Homepage cards show static PNG screenshots instead of live components, to avoid shipping component JS in the homepage bundle.
 
-- Screenshots live in [public/previews/](public/previews/) — **do not hand-edit**.
+- Screenshots live in [public/previews/](public/previews/) — **do not hand-edit**. Each component produces two files: `<name>.png` (light) and `<name>-dark.png` (dark). The homepage switches between them via `dark:hidden` / `hidden dark:block`.
 - Generated by: `pnpm capture-previews <name>` (one) or `pnpm capture-previews <a> <b>` (several). Running without arguments errors — a component name is always required.
+- The script uses Playwright (Chromium), auto-starts a dev server on **port 3005** if one isn't running, and screenshots the `/preview/<name>` route. It strips the header/footer and zooms the component to fill an 800px viewport.
 - **Never run `pnpm capture-previews --all`** unless the user explicitly asks. Only regenerate the specific component(s) that changed.
 - `--all` exists for rare cases like a preview layout redesign or Chromium update — not for routine use.
 - The script auto-discovers components from `app/docs/` — any folder with an `examples/basic.tsx` is captured.
-- **After modifying any `app/docs/<name>/examples/basic.tsx`**, run `pnpm capture-previews <name>` and stage the updated PNG. The pre-commit hook enforces this — it will block a commit that stages `basic.tsx` without the corresponding PNG.
+- **After modifying any `app/docs/<name>/examples/basic.tsx`**, run `pnpm capture-previews <name>` and stage the updated PNG. The pre-commit hook (`.git/hooks/pre-commit`) enforces this — it will block a commit that stages `basic.tsx` without the corresponding PNG.

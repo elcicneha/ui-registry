@@ -3,6 +3,7 @@ import * as React from "react"
 import fs from "node:fs/promises"
 import path from "node:path"
 
+import { CodeBlock } from "@/components/code-block"
 import { ComponentPreview } from "@/components/component-preview"
 import { DocBreadcrumb } from "@/components/doc-breadcrumb"
 import { DocExample } from "@/components/doc-example"
@@ -137,6 +138,23 @@ export default async function InputPhoneDocsPage() {
           deps={NPM_DEPENDENCIES}
           source={manualSource}
           sourcePath={MANUAL_TARGET_PATH}
+        />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 id="usage">Usage</h2>
+        <CodeBlock
+          code={`import { InputPhone } from "@/components/ui/input-phone"`}
+          language="tsx"
+        />
+        <CodeBlock
+          code={`<InputPhone
+  value={value}
+  onChange={setValue}
+  defaultCountry="US"
+  placeholder="Enter a phone number"
+/>`}
+          language="tsx"
         />
       </section>
 
