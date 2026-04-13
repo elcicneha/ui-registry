@@ -29,6 +29,7 @@ type StaticProps = BaseProps & {
 }
 
 const COLLAPSED_HEIGHT = { default: "11rem", sm: "7rem" } as const
+const MAX_EXPANDED_HEIGHT = "18rem"
 
 type CollapsibleProps = BaseProps & {
   collapsible: true
@@ -149,17 +150,19 @@ function CollapsibleCodeBlock({
     null
   )
 
-  // Measure the full content height so we can transition max-height
-  // between the collapsed value and the real pixel height of the code.
   React.useLayoutEffect(() => {
     if (!contentRef.current) return
     setMeasuredHeight(contentRef.current.scrollHeight)
   }, [code])
 
+  const maxExpandedPx = 18 * 16 // MAX_EXPANDED_HEIGHT in px
   const collapsedRem = COLLAPSED_HEIGHT[collapsedHeight]
-  const targetHeight = open
-    ? measuredHeight != null ? `${measuredHeight}px` : collapsedRem
-    : collapsedRem
+  const expandedHeight =
+    measuredHeight != null
+      ? `${Math.min(measuredHeight, maxExpandedPx)}px`
+      : MAX_EXPANDED_HEIGHT
+  const targetHeight = open ? expandedHeight : collapsedRem
+  const needsScroll = open && measuredHeight != null && measuredHeight > maxExpandedPx
   const toggleLabel = open ? collapseLabel : expandLabel
 
   const toggle = React.useCallback(() => setOpen((o) => !o), [])
@@ -204,7 +207,7 @@ function CollapsibleCodeBlock({
           maxHeight: targetHeight,
           transition: "max-height 300ms ease-out",
         }}
-        className="relative overflow-hidden"
+        className={cn("relative", needsScroll ? "overflow-auto" : "overflow-hidden")}
       >
         <CodeContent
           code={code}
