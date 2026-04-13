@@ -1,11 +1,11 @@
+import type { Metadata } from "next"
 import * as React from "react"
 import fs from "node:fs/promises"
 import path from "node:path"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 
 import { CodeBlock } from "@/components/code-block"
 import { ComponentPreview } from "@/components/component-preview"
+import { DocBreadcrumb } from "@/components/doc-breadcrumb"
 import { DocExample } from "@/components/doc-example"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
@@ -19,6 +19,12 @@ import DisabledExample from "./examples/disabled"
 import ControlledExample from "./examples/controlled"
 import InvalidExample from "./examples/invalid"
 import AlphanumericExample from "./examples/alphanumeric"
+
+export const metadata: Metadata = {
+  title: "Input OTP",
+  description:
+    "A one-time password input with individually boxed character slots, as an alternative to shadcn's default joined pill-style OTP.",
+}
 
 const REGISTRY_NAME = "input-otp"
 const MANUAL_TARGET_PATH = "components/ui/input-otp.tsx"
@@ -133,14 +139,8 @@ export default async function InputOTPDocsPage() {
   ])
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-3xl flex-col gap-12 px-4 py-10">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Back to components
-      </Link>
+    <div className="flex flex-col gap-12">
+      <DocBreadcrumb title="Input OTP" />
 
       <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
@@ -157,14 +157,14 @@ export default async function InputOTPDocsPage() {
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2 >Preview</h2>
+        <h2 id="preview">Preview</h2>
         <ComponentPreview code={basicCode}>
           <BasicExample />
         </ComponentPreview>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 >Installation</h2>
+        <h2 id="installation">Installation</h2>
         <InstallSection
           cliCommands={makeCliCommands(REGISTRY_NAME)}
           deps={NPM_DEPENDENCIES}
@@ -174,7 +174,7 @@ export default async function InputOTPDocsPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 >Composition</h2>
+        <h2 id="composition">Composition</h2>
         <p>
           Use the following composition to build an{" "}
           <code>InputOTP</code>:
@@ -183,7 +183,7 @@ export default async function InputOTPDocsPage() {
       </section>
 
       <section className="flex flex-col gap-8">
-        <h2>Examples</h2>
+        <h2 id="examples">Examples</h2>
 
         <div className="flex flex-col gap-12">
           <DocExample
@@ -237,11 +237,11 @@ export default async function InputOTPDocsPage() {
       </section>
 
       <section className="flex flex-col gap-6">
-        <h2>API Reference</h2>
+        <h2 id="api-reference">API Reference</h2>
 
         <div className="flex flex-col gap-3">
-          <h3>InputOTP</h3>
-          <p >
+          <h3 id="inputotp">InputOTP</h3>
+          <p>
             Root component. Accepts every prop from the underlying{" "}
             <code>OTPInput</code> in{" "}
             <code>input-otp</code> — the most
@@ -251,10 +251,8 @@ export default async function InputOTPDocsPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3>
-            InputOTPSlot
-          </h3>
-          <p >
+          <h3 id="inputotpslot">InputOTPSlot</h3>
+          <p>
             A single character slot. Renders the character, active ring, and
             blinking caret.
           </p>
@@ -262,8 +260,8 @@ export default async function InputOTPDocsPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3>
-            InputOTPGroup & InputOTPSeparator
+          <h3 id="inputotpgroup-inputotpseparator">
+            InputOTPGroup &amp; InputOTPSeparator
           </h3>
           <p>
             Layout helpers.{" "}
@@ -277,8 +275,8 @@ export default async function InputOTPDocsPage() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2>Accessibility</h2>
-        <ul >
+        <h2 id="accessibility">Accessibility</h2>
+        <ul>
           <li>
             Full keyboard navigation — typing, backspace, arrow keys, and
             paste all work as expected.

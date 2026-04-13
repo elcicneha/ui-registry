@@ -89,8 +89,19 @@ async function main() {
       const out = path.join(PREVIEWS_DIR, `${name}.png`)
       process.stdout.write(`  ${name}… `)
       await page.goto(url, { waitUntil: "networkidle" })
-      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
 
+      // Strip site chrome (header, footer, flex layout) so the preview
+      // renders as a bare component — matches the layout before the UX
+      // overhaul added these elements to the root layout.
+      await page.addStyleTag({
+        content: [
+          "nextjs-portal, header, footer { display: none !important; }",
+          "body { display: block !important; min-height: auto !important; }",
+          "main { display: block !important; flex: none !important; }",
+        ].join("\n"),
+      })
+
+      // Measure and zoom the component to fill the viewport width.
       await page.evaluate(() => {
         const el = document.querySelector("[data-preview-target]")
         if (!el) return
@@ -99,9 +110,14 @@ async function main() {
         // render at their natural max-width instead of collapsing.
         el.style.width = "400px"
 
-        // getBoundingClientRect() forces a synchronous reflow, so this
-        // measures the component at its correct rendered width.
-        const child = el.firstElementChild
+        // Find the first *visible* child — some libraries (e.g. input-otp)
+        // inject a <noscript> as the first child which has 0×0 dimensions.
+        const children = Array.from(el.children)
+        const child = children.find((c) => {
+          const r = c.getBoundingClientRect()
+          return r.width > 0 && r.height > 0
+        })
+
         const componentWidth = (child ?? el).getBoundingClientRect().width
         const padding = 16 // p-2 = 8px each side
 
@@ -112,9 +128,18 @@ async function main() {
         el.style.zoom = String(800 / (componentWidth + padding))
       })
 
-      const bytes = await page.locator("[data-preview-target]").screenshot()
-      writeFileSync(out, bytes)
-      console.log(`saved → public/previews/${name}.png`)
+      // --- Light mode screenshot ---
+      await page.evaluate(() => document.documentElement.classList.remove("dark"))
+      const lightBytes = await page.locator("[data-preview-target]").screenshot()
+      writeFileSync(out, lightBytes)
+
+      // --- Dark mode screenshot ---
+      await page.evaluate(() => document.documentElement.classList.add("dark"))
+      const darkOut = path.join(PREVIEWS_DIR, `${name}-dark.png`)
+      const darkBytes = await page.locator("[data-preview-target]").screenshot()
+      writeFileSync(darkOut, darkBytes)
+
+      console.log(`saved → public/previews/${name}.png + ${name}-dark.png`)
     }
   } finally {
     await browser.close()

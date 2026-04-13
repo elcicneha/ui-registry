@@ -1,10 +1,10 @@
+import type { Metadata } from "next"
 import * as React from "react"
 import fs from "node:fs/promises"
 import path from "node:path"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 
 import { ComponentPreview } from "@/components/component-preview"
+import { DocBreadcrumb } from "@/components/doc-breadcrumb"
 import { DocExample } from "@/components/doc-example"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
@@ -15,6 +15,12 @@ import BasicExample from "./examples/basic"
 import ControlledExample from "./examples/controlled"
 import DefaultCountryExample from "./examples/default-country"
 import OneCountryExample from "./examples/one-country"
+
+export const metadata: Metadata = {
+  title: "Input Phone",
+  description:
+    "Phone number input with a searchable country picker, backed by react-phone-number-input. Outputs E.164 formatted values.",
+}
 
 const REGISTRY_NAME = "input-phone"
 const MANUAL_TARGET_PATH = "components/ui/input-phone.tsx"
@@ -100,14 +106,8 @@ export default async function InputPhoneDocsPage() {
   ])
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-3xl flex-col gap-12 px-4 py-10">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Back to components
-      </Link>
+    <div className="flex flex-col gap-12">
+      <DocBreadcrumb title="Input Phone" />
 
       <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
@@ -115,9 +115,7 @@ export default async function InputPhoneDocsPage() {
             <h1>Input Phone</h1>
             <p>
               Phone number input with a searchable country picker, backed by{" "}
-              <code className="font-mono text-sm">
-                react-phone-number-input
-              </code>
+              <code>react-phone-number-input</code>
               . Outputs E.164 formatted values.
             </p>
           </div>
@@ -126,14 +124,14 @@ export default async function InputPhoneDocsPage() {
       </header>
 
       <section className="flex flex-col gap-4">
-        <h2>Preview</h2>
+        <h2 id="preview">Preview</h2>
         <ComponentPreview code={basicCode}>
           <BasicExample />
         </ComponentPreview>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2>Installation</h2>
+        <h2 id="installation">Installation</h2>
         <InstallSection
           cliCommands={makeCliCommands(REGISTRY_NAME)}
           deps={NPM_DEPENDENCIES}
@@ -143,7 +141,7 @@ export default async function InputPhoneDocsPage() {
       </section>
 
       <section className="flex flex-col gap-8">
-        <h2>Examples</h2>
+        <h2 id="examples">Examples</h2>
         <div className="flex flex-col gap-12">
           <DocExample
             title="Controlled"
@@ -176,10 +174,10 @@ export default async function InputPhoneDocsPage() {
       </section>
 
       <section className="flex flex-col gap-6">
-        <h2>API Reference</h2>
+        <h2 id="api-reference">API Reference</h2>
 
         <div className="flex flex-col gap-3">
-          <h3>InputPhone</h3>
+          <h3 id="inputphone">InputPhone</h3>
           <p>
             A single component that wraps{" "}
             <code>react-phone-number-input</code>
@@ -195,8 +193,8 @@ export default async function InputPhoneDocsPage() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2>Accessibility</h2>
-        <ul >
+        <h2 id="accessibility">Accessibility</h2>
+        <ul>
           <li>
             The country picker button is keyboard-focusable and opens a
             searchable{" "}
