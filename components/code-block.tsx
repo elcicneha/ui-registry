@@ -4,7 +4,7 @@ import * as React from "react"
 import { FileCode2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/registry/new-york/ui/button"
+import { Button } from "@/components/ui/button"
 import { CopyButton } from "@/components/copy-button"
 import {
   Collapsible,
@@ -152,7 +152,6 @@ function CollapsibleCodeBlock({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 {toggleLabel}
               </Button>
@@ -165,7 +164,6 @@ function CollapsibleCodeBlock({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
               {toggleLabel}
             </Button>
@@ -200,7 +198,7 @@ function CollapsibleCodeBlock({
               variant="outline"
               size="sm"
               onClick={toggle}
-              className="pointer-events-auto h-8 bg-background text-xs font-medium shadow-sm hover:bg-muted"
+              className="pointer-events-auto shadow-sm"
             >
               {expandLabel}
             </Button>

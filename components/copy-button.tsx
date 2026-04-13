@@ -4,7 +4,7 @@ import * as React from "react"
 import { Check, Copy } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/registry/new-york/ui/button"
+import { Button } from "@/components/ui/button"
 
 export function CopyButton({
   value,
@@ -25,7 +25,7 @@ export function CopyButton({
     <Button
       type="button"
       variant="ghost"
-      size="icon"
+      size="iconSm"
       aria-label={copied ? "Copied" : "Copy to clipboard"}
       onClick={async () => {
         try {
@@ -36,7 +36,7 @@ export function CopyButton({
         }
       }}
       className={cn(
-        "size-7 text-muted-foreground hover:text-foreground",
+        "",
         className
       )}
     >
