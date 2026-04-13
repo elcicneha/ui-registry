@@ -34,6 +34,7 @@ export function ComponentPreview({
         code={code}
         language="tsx"
         collapsible
+        collapsedHeight="sm"
         expandLabel="View Code"
         collapseLabel="Hide Code"
       />

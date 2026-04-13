@@ -27,12 +27,14 @@ type StaticProps = BaseProps & {
   collapsedHeight?: never
 }
 
+const COLLAPSED_HEIGHT = { default: "11rem", sm: "7rem" } as const
+
 type CollapsibleProps = BaseProps & {
   collapsible: true
   expandLabel?: string
   collapseLabel?: string
   defaultOpen?: boolean
-  collapsedHeight?: string | number
+  collapsedHeight?: keyof typeof COLLAPSED_HEIGHT
 }
 
 export type CodeBlockProps = StaticProps | CollapsibleProps
@@ -110,7 +112,7 @@ function CollapsibleCodeBlock({
   expandLabel = "Expand",
   collapseLabel = "Collapse",
   defaultOpen = false,
-  collapsedHeight = 176,
+  collapsedHeight = "default",
 }: CollapsibleProps) {
   const [open, setOpen] = React.useState(defaultOpen)
   const contentRef = React.useRef<HTMLDivElement>(null)
@@ -125,11 +127,10 @@ function CollapsibleCodeBlock({
     setMeasuredHeight(contentRef.current.scrollHeight)
   }, [code])
 
-  const collapsedPx =
-    typeof collapsedHeight === "number" ? collapsedHeight : 176
-  const targetHeightPx = open
-    ? measuredHeight ?? collapsedPx
-    : collapsedPx
+  const collapsedRem = COLLAPSED_HEIGHT[collapsedHeight]
+  const targetHeight = open
+    ? measuredHeight != null ? `${measuredHeight}px` : collapsedRem
+    : collapsedRem
   const toggleLabel = open ? collapseLabel : expandLabel
 
   const toggle = React.useCallback(() => setOpen((o) => !o), [])
@@ -149,22 +150,17 @@ function CollapsibleCodeBlock({
           code={code}
           trailing={
             <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-              >
+              <Button variant="ghost" size="sm">
                 {toggleLabel}
               </Button>
             </CollapsibleTrigger>
           }
         />
       ) : (
-        <div className="absolute right-2 top-2 z-20 flex items-center gap-1">
+        /* No filename — still use a header bar so controls never overlap code */
+        <div className="flex items-center justify-end gap-1 border-b bg-muted/30 px-2 py-1">
           <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-            >
+            <Button variant="ghost" size="sm">
               {toggleLabel}
             </Button>
           </CollapsibleTrigger>
@@ -176,12 +172,12 @@ function CollapsibleCodeBlock({
       <div
         ref={contentRef}
         style={{
-          maxHeight: `${targetHeightPx}px`,
+          maxHeight: targetHeight,
           transition: "max-height 300ms ease-out",
         }}
         className="relative overflow-hidden"
       >
-        <pre className="overflow-x-auto p-4 pr-12 text-sm leading-relaxed">
+        <pre className="overflow-x-auto p-4 text-sm leading-relaxed">
           <code
             data-language={language}
           >
