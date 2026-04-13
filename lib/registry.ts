@@ -1,7 +1,12 @@
 import type { PackageManagerCommands } from "@/components/code-block-command"
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://your-registry.com"
+export const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://your-registry.com")
 
 export function makeCliCommands(registryName: string): PackageManagerCommands {
   const url = `${baseUrl}/r/${registryName}.json`

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { baseUrl } from "@/lib/registry"
 import { cn } from "@/lib/utils"
 
 export function OpenInV0Button({
@@ -16,7 +17,7 @@ export function OpenInV0Button({
       asChild
     >
       <a
-        href={`https://v0.dev/chat/api/open?url=${process.env.NEXT_PUBLIC_BASE_URL}/r/${name}.json`}
+        href={`https://v0.dev/chat/api/open?url=${baseUrl}/r/${name}.json`}
         target="_blank"
         rel="noreferrer"
       >
