@@ -86,14 +86,14 @@ export function DocToc() {
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         On this page
       </p>
-      <ul className="space-y-1 list-none p-0">
+      <ul className="space-y-1.5 list-none p-0">
         {entries.map((entry) => (
           <li key={entry.id} className={cn(entry.level === 3 && "pl-3")}>
             <a
               href={`#${entry.id}`}
 
               className={cn(
-                "block rounded text-xs leading-relaxed transition-colors",
+                "block rounded text-sm leading-relaxed transition-colors",
                 activeId === entry.id
                   ? "font-medium text-foreground"
                   : "text-muted-foreground hover:text-foreground"

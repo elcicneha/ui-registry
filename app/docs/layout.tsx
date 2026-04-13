@@ -9,7 +9,7 @@ export default function DocsLayout({
   return (
     <div className="flex w-full">
       {/* Left sidebar — 32px padding each side, no border */}
-      <aside className="hidden w-56 shrink-0 md:block">
+      <aside className="hidden w-66 shrink-0 md:block">
         <div className="sticky top-14 h-[calc(100svh-3.5rem)] overflow-y-auto px-8 py-8">
           <DocsSidebar />
         </div>
@@ -23,7 +23,7 @@ export default function DocsLayout({
       </div>
 
       {/* Right TOC — 32px padding each side, no border */}
-      <aside className="hidden w-56 shrink-0 xl:block">
+      <aside className="hidden w-66 shrink-0 xl:block">
         <div className="sticky top-14 h-[calc(100svh-3.5rem)] overflow-y-auto px-8 py-8">
           <DocToc />
         </div>

@@ -13,7 +13,7 @@ export function DocsSidebar() {
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Components
       </p>
-      <ul className="space-y-0.5 list-none p-0">
+      <ul className="space-y-1.5 list-none p-0">
         {registryItems.map((item) => {
           const isActive = pathname === item.href
           return (
