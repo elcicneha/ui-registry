@@ -94,7 +94,7 @@ function stripCountryCode(
 const PhoneInputField = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<"input">
->(({ className, autoComplete, onBlur, ...props }, ref) => {
+>(({ className, autoComplete, onBlur, onKeyDown, ...props }, ref) => {
   const innerRef = React.useRef<HTMLInputElement>(null)
 
   const setRef = React.useCallback(
@@ -128,6 +128,19 @@ const PhoneInputField = React.forwardRef<
     return () => el.removeEventListener("input", handleAutoFill)
   }, [])
 
+  // input-format (used by react-phone-number-input's smart-caret mode) intercepts
+  // ALL Backspace/Delete keydowns and calls preventDefault(), which hijacks
+  // browser-native modifier+delete shortcuts (Cmd+Backspace = delete to line start,
+  // Option+Backspace = delete previous word). By not forwarding the event to the
+  // library's onKeyDown for those combos, the browser performs its native deletion;
+  // the subsequent 'input' event triggers input-format's onChange which reformats.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.metaKey || e.altKey || e.ctrlKey) && (e.key === "Backspace" || e.key === "Delete")) {
+      return
+    }
+    onKeyDown?.(e)
+  }
+
   // Strip +cc on blur only when the library confirms a complete number
   // (parsePhoneNumber succeeded + isPossible). Partial mid-typed input is left
   // untouched so the user can continue editing after re-focusing.
@@ -146,6 +159,7 @@ const PhoneInputField = React.forwardRef<
       ref={setRef}
       autoComplete={autoComplete ?? "tel"}
       onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
       className={cn(
         "flex-1 min-w-0 bg-transparent px-3 py-1 text-base outline-none",
         "placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
