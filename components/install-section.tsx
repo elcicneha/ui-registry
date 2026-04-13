@@ -1,6 +1,6 @@
 "use client"
 
-import { CodeBlock } from "@/components/code-block"
+import { BaseCodeBlock } from "@/components/base-code-block"
 import { CodeBlockCommand } from "@/components/code-block-command"
 import {
   CodeBlockManual,
@@ -21,10 +21,11 @@ type Props = {
   cliCommands: PackageManagerCommands
   deps?: string[]
   source: string
+  sourceHtml?: string
   sourcePath: string
 }
 
-export function InstallSection({ cliCommands, deps, source, sourcePath }: Props) {
+export function InstallSection({ cliCommands, deps, source, sourceHtml, sourcePath }: Props) {
   const depsCommands = deps?.length ? makeDepsCommands(deps) : null
 
   // Step numbers shift when there are no deps
@@ -62,8 +63,9 @@ export function InstallSection({ cliCommands, deps, source, sourcePath }: Props)
               <code>{sourcePath}</code>.
             </CodeBlockManualStepTitle>
             <CodeBlockManualStepContent>
-              <CodeBlock
+              <BaseCodeBlock
                 code={source}
+                highlightedHtml={sourceHtml}
                 filename={sourcePath}
                 language="tsx"
                 collapsible

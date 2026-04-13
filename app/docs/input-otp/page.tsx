@@ -12,6 +12,7 @@ import { OpenInV0Button } from "@/components/open-in-v0-button"
 import { PropsTable, type PropRow } from "@/components/props-table"
 import { loadExampleSource } from "@/lib/docs"
 import { makeCliCommands } from "@/lib/registry"
+import { highlightCode } from "@/lib/highlight-code"
 import BasicExample from "./examples/basic"
 import SeparatorExample from "./examples/separator"
 import DigitsOnlyExample from "./examples/digits-only"
@@ -138,6 +139,8 @@ export default async function InputOTPDocsPage() {
     loadExampleSource("app/docs/input-otp/examples/alphanumeric.tsx"),
   ])
 
+  const manualSourceHtml = await highlightCode(manualSource, "tsx")
+
   return (
     <div className="flex flex-col gap-12">
       <DocBreadcrumb title="Input OTP" />
@@ -169,6 +172,7 @@ export default async function InputOTPDocsPage() {
           cliCommands={makeCliCommands(REGISTRY_NAME)}
           deps={NPM_DEPENDENCIES}
           source={manualSource}
+          sourceHtml={manualSourceHtml}
           sourcePath={MANUAL_TARGET_PATH}
         />
       </section>

@@ -196,4 +196,17 @@
   ul {
     @apply list-disc space-y-1 pl-5 text-sm text-muted-foreground;
   }
+
+  /* Shiki dual-theme: light uses --shiki-light, dark uses --shiki-dark */
+  .shiki,
+  .shiki span {
+    color: var(--shiki-light);
+    background-color: transparent;
+  }
+
+  .dark .shiki,
+  .dark .shiki span {
+    color: var(--shiki-dark);
+    background-color: transparent;
+  }
 }
