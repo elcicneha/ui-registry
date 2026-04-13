@@ -226,7 +226,7 @@ function CountrySelect({
             disabled={disabled}
             className={cn(
               "h-full rounded-none px-2.5 has-[>svg]:pl-2.5 has-[>svg]:pr-1.5 gap-1.5 text-sm font-normal",
-              "focus-visible:ring-0 focus-visible:border-transparent focus-visible:ring-offset-0",
+              "focus-visible:ring-0 focus-visible:border-transparent focus-visible:ring-offset-0 focus-visible:bg-accent",
               isSingleCountry && "pointer-events-none cursor-default",
             )}
           >
