@@ -8,7 +8,8 @@ import {
   CodeBlockManualStepContent,
   CodeBlockManualStepTitle,
 } from "@/components/code-block-manual"
-import { makeCliCommands, makeDepsCommands } from "@/lib/registry"
+import { makeDepsCommands } from "@/lib/registry"
+import type { PackageManagerCommands } from "@/components/code-block-command"
 import {
   Tabs,
   TabsContent,
@@ -17,14 +18,13 @@ import {
 } from "@/components/ui/tabs"
 
 type Props = {
-  name: string
+  cliCommands: PackageManagerCommands
   deps?: string[]
   source: string
   sourcePath: string
 }
 
-export function InstallSection({ name, deps, source, sourcePath }: Props) {
-  const cliCommands = makeCliCommands(name)
+export function InstallSection({ cliCommands, deps, source, sourcePath }: Props) {
   const depsCommands = deps?.length ? makeDepsCommands(deps) : null
 
   // Step numbers shift when there are no deps

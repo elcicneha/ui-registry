@@ -11,6 +11,7 @@ import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
 import { PropsTable, type PropRow } from "@/components/props-table"
 import { loadExampleSource } from "@/lib/docs"
+import { makeCliCommands } from "@/lib/registry"
 import BasicExample from "./examples/basic"
 import SeparatorExample from "./examples/separator"
 import DigitsOnlyExample from "./examples/digits-only"
@@ -165,7 +166,7 @@ export default async function InputOTPDocsPage() {
       <section className="flex flex-col gap-4">
         <h2 >Installation</h2>
         <InstallSection
-          name={REGISTRY_NAME}
+          cliCommands={makeCliCommands(REGISTRY_NAME)}
           deps={NPM_DEPENDENCIES}
           source={manualSource}
           sourcePath={MANUAL_TARGET_PATH}
