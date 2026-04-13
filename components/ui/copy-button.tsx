@@ -5,6 +5,7 @@ import { Check, Copy } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { IconToggle } from "@/components/ui/icon-toggle"
 
 export function CopyButton({
   value,
@@ -40,7 +41,12 @@ export function CopyButton({
         className
       )}
     >
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      <span className="sr-only">Copy</span>
+      <IconToggle
+        isToggled={copied}
+        primary={<Copy />}
+        secondary={<Check />}
+      />
     </Button>
   )
 }

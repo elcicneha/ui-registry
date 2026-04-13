@@ -5,7 +5,7 @@ import { FileCode2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { CopyButton } from "@/components/copy-button"
+import { CopyButton } from "@/components/ui/copy-button"
 import {
   Collapsible,
   CollapsibleTrigger,

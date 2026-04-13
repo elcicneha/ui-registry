@@ -4,7 +4,7 @@ import * as React from "react"
 import { Terminal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { CopyButton } from "@/components/copy-button"
+import { CopyButton } from "@/components/ui/copy-button"
 import {
   Tabs,
   TabsContent,
