@@ -1,20 +1,13 @@
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
-
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/registry/new-york/blocks/input-otp/input-otp"
-import { InputPhone } from "@/registry/new-york/blocks/input-phone/input-phone"
 
 type RegistryItem = {
   name: string
   title: string
   description: string
   href: string
-  preview: React.ReactNode
 }
 
 const items: RegistryItem[] = [
@@ -24,18 +17,6 @@ const items: RegistryItem[] = [
     description:
       "A one-time password input with individually boxed character slots.",
     href: "/docs/input-otp",
-    preview: (
-      <InputOTP maxLength={6}>
-        <InputOTPGroup>
-          <InputOTPSlot index={0} />
-          <InputOTPSlot index={1} />
-          <InputOTPSlot index={2} />
-          <InputOTPSlot index={3} />
-          <InputOTPSlot index={4} />
-          <InputOTPSlot index={5} />
-        </InputOTPGroup>
-      </InputOTP>
-    ),
   },
   {
     name: "input-phone",
@@ -43,7 +24,6 @@ const items: RegistryItem[] = [
     description:
       "Phone number input with searchable country picker, backed by react-phone-number-input.",
     href: "/docs/input-phone",
-    preview: <InputPhone defaultCountry="US" placeholder="Phone number" />,
   },
 ]
 
@@ -59,7 +39,6 @@ export default function Home() {
       </header>
 
       <main className="flex flex-col gap-4">
-
         <div className="flex flex-col gap-4" role="list">
           {items.map((item) => (
             <div
@@ -70,17 +49,20 @@ export default function Home() {
               <div className="flex flex-col gap-1">
                 <Link
                   href={item.href}
-                  className="inline-flex items-center gap-1 text-base font-semibold tracking-tight after:absolute after:inset-0 after:content-['']"
+                  className="inline-flex items-center gap-1 text-base font-semibold tracking-tight after:absolute after:inset-0 after:z-10 after:content-['']"
                 >
                   {item.title}
                   <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
-                <p>
-                  {item.description}
-                </p>
+                <p>{item.description}</p>
               </div>
-              <div className="flex min-h-[120px] items-center justify-center rounded-md border bg-background p-6">
-                {item.preview}
+              <div className="relative h-32 overflow-hidden rounded-md border bg-background">
+                <Image
+                  src={`/previews/${item.name}.png`}
+                  alt={`${item.title} preview`}
+                  fill
+                  className="object-contain object-top p-8"
+                />
               </div>
             </div>
           ))}
