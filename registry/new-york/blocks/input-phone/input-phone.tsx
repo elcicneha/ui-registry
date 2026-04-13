@@ -38,10 +38,11 @@ type InputPhoneProps = Omit<
 const InputPhone = React.forwardRef<
   React.ComponentRef<typeof RPNInput.default>,
   InputPhoneProps
->(({ className, onChange, value, country, ...props }, ref) => {
+>(({ className, onChange, value, country, "aria-invalid": ariaInvalid, ...props }, ref) => {
   return (
     <div
       data-slot="input-phone"
+      aria-invalid={ariaInvalid}
       className={cn(
         "flex h-9 w-full min-w-0 items-center rounded-md border border-input bg-transparent shadow-xs transition-[color,box-shadow] outline-none overflow-hidden dark:bg-input/30",
         "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
@@ -99,7 +100,7 @@ const PhoneInputField = React.forwardRef<
 
   const setRef = React.useCallback(
     (node: HTMLInputElement | null) => {
-      ;(innerRef as React.RefObject<HTMLInputElement | null>).current =
+      ; (innerRef as React.RefObject<HTMLInputElement | null>).current =
         node
       if (typeof ref === "function") ref(node)
       else if (ref)
