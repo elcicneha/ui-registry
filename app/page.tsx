@@ -27,14 +27,14 @@ export default function Home() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-16 px-4 py-16">
       {/* Hero */}
-      <header className="relative flex flex-col gap-6">
+      <header className=" flex flex-col gap-6">
         {/* Dot-grid background */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -inset-x-8 -top-8 h-64 opacity-40 dark:opacity-20"
+          className="pointer-events-none absolute -inset-x-8 top-20 h-64 opacity-40"
           style={{
             backgroundImage:
-              "radial-gradient(circle, oklch(0.527 0.154 150.069 / 0.35) 1px, transparent 1px)",
+              "radial-gradient(circle, var(--dot-grid-color) 1px, transparent 1px)",
             backgroundSize: "24px 24px",
             maskImage:
               "radial-gradient(ellipse 80% 100% at 50% 0%, black 40%, transparent 80%)",
@@ -110,15 +110,26 @@ export default function Home() {
                 </div>
 
                 {/* Metadata */}
+                {/* <Link
+                  href={item.href}
+                >
+                  <div className="flex flex-col gap-1 p-4">
+                    <div className="inline-flex items-center gap-1 font-semibold tracking-tight">
+                      {item.title}
+                      <ArrowUpRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </div>
+                    <p className="text-sm">{item.description}</p>
+                  </div>
+                </Link> */}
                 <div className="flex flex-col gap-1 p-4">
                   <Link
                     href={item.href}
-                    className="inline-flex items-center gap-1 text-sm font-semibold tracking-tight after:absolute after:inset-0 after:z-10 after:content-['']"
+                    className="inline-flex items-center gap-1 font-semibold tracking-tight after:absolute after:inset-0 after:z-10 after:content-['']"
                   >
                     {item.title}
                     <ArrowUpRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </Link>
-                  <p className="text-xs leading-relaxed">{item.description}</p>
+                  <p className="text-sm">{item.description}</p>
                 </div>
               </div>
             </div>

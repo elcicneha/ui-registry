@@ -104,6 +104,7 @@
   --chart-4: oklch(0.394 0.023 107.4);
   --chart-5: oklch(0.286 0.016 107.4);
   --radius: 0.625rem;
+  --dot-grid-color: color-mix(in oklch, var(--primary) 35%, transparent);
   --sidebar: oklch(0.988 0.003 106.5);
   --sidebar-foreground: oklch(0.153 0.006 107.1);
   --sidebar-primary: oklch(0.627 0.194 149.214);
@@ -117,6 +118,7 @@
 .dark {
   --background: oklch(0.153 0.006 107.1);
   --foreground: oklch(0.988 0.003 106.5);
+  --dot-grid-color: color-mix(in oklch, var(--primary) 40%, transparent);
   --card: oklch(0.228 0.013 107.4);
   --card-foreground: oklch(0.988 0.003 106.5);
   --popover: oklch(0.228 0.013 107.4);
