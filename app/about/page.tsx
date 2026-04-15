@@ -41,7 +41,7 @@ export default function AboutPage() {
           >
             <div className="relative h-28 w-full overflow-hidden bg-muted">
               <Image
-                src="/neha.jpg"
+                src="/meeee.jpg"
                 alt="Neha Gupta"
                 fill
                 className="object-cover object-top"
