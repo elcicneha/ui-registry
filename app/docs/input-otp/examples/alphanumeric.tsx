@@ -7,9 +7,17 @@ import {
   REGEXP_ONLY_DIGITS_AND_CHARS,
 } from "@/registry/new-york/blocks/input-otp/input-otp"
 
-export default function AlphanumericExample() {
+export default function AlphanumericExample({
+  variant = "boxed",
+}: {
+  variant?: "boxed" | "joined"
+}) {
   return (
-    <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS_AND_CHARS}>
+    <InputOTP
+      maxLength={6}
+      pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+      variant={variant}
+    >
       <InputOTPGroup>
         <InputOTPSlot index={0} />
         <InputOTPSlot index={1} />

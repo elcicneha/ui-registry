@@ -7,12 +7,21 @@ import {
   InputOTPSlot,
 } from "@/registry/new-york/blocks/input-otp/input-otp"
 
-export default function ControlledExample() {
+export default function ControlledExample({
+  variant = "boxed",
+}: {
+  variant?: "boxed" | "joined"
+}) {
   const [value, setValue] = React.useState("")
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <InputOTP maxLength={6} value={value} onChange={setValue}>
+      <InputOTP
+        maxLength={6}
+        value={value}
+        onChange={setValue}
+        variant={variant}
+      >
         <InputOTPGroup>
           <InputOTPSlot index={0} />
           <InputOTPSlot index={1} />

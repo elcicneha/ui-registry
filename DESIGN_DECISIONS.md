@@ -4,6 +4,29 @@ A running log of architectural and product decisions. Each entry: what we decide
 
 ---
 
+## 2026-04-19 — `input-otp` rebuilt on shadcn stock, with a `variant` prop
+
+**Decision.** The `input-otp` block is now the freshly-installed shadcn stock source with a single addition: a `variant?: "boxed" | "joined"` prop on `InputOTP` that propagates via React context to `InputOTPGroup` and `InputOTPSlot`. `"boxed"` remains the default, so existing consumers see no visual change. `"joined"` reproduces shadcn's stock pill styling verbatim. Installed pristine copy lives at `registry/new-york/ui/input-otp.tsx` as reference; nothing imports from it — the block stays self-contained.
+
+**Context.** The hand-written block had drifted from upstream shadcn (different slot sizing, responsive text, non-standard transition, missing `data-[active=true]:z-10`). Rebuilding on stock keeps us aligned and lets both looks coexist behind one registry item instead of forking.
+
+**Options considered.**
+- **A. Variant prop on one component (chosen).** Single file, single install, context-driven style swap. Consumers who upgrade get both looks. One registry entry, one doc page.
+- **B. Two separate registry items** (`input-otp`, `input-otp-joined`). Cleaner code per file but doubles the surface area of the registry and forces docs/homepage duplication.
+- **C. CVA `inputOTPVariants` export.** Overkill for two shapes; no composition story; ergonomically worse than a typed union.
+
+**Kept from the previous hand-written block**: `w-fit` on the root `OTPInput` container (so it sizes to content), and `transition-[color,box-shadow]` on the slot (scoped transitions). **Dropped**: `aspect-square h-9 w-auto shrink-0` (back to stock `h-9 w-9`) and `text-base md:text-sm` (back to stock `text-sm`) — the iOS-zoom and aspect-ratio tweaks were judged not worth the drift from upstream.
+
+**Docs UX.** Single global `Variant: [Boxed] [Joined]` toggle in the page header (below the `<h1>`) re-renders every preview — hero + all seven example demos — in the selected variant. Toggle state lives in a small `DocsVariantProvider` context; each preview/example is wrapped in a `VariantComponentPreview` / `VariantDocExample` client shell that reads the context and passes `variant` into the example component as a prop. Loaded source strings show `variant={variant}` — a legitimate consumer pattern.
+
+**Why.** Keeping the block in sync with shadcn upstream avoids silent drift when the stock component changes. A single-file, single-install delivery matches the project's "shadcn-native" philosophy. Boxed-as-default preserves the registry's identity without breaking anyone who already installed the component.
+
+**Supersedes.** The 2026-04-11 entry below — input-otp still ships standalone with no `registryDependencies`, but is no longer a fork of the stock source; it now extends it.
+
+**Related files.** `registry/new-york/blocks/input-otp/input-otp.tsx` (rewritten), `registry/new-york/ui/input-otp.tsx` (pristine, reference-only), `components/docs-variant-context.tsx`, `components/docs-variant-toggle.tsx`, `components/variant-preview.tsx` (new shared docs plumbing, reusable for future multi-variant components).
+
+---
+
 ## 2026-04-12 — `input-phone` architecture
 
 **Decision.** Single file at `registry/new-york/blocks/input-phone/input-phone.tsx`, backed by `react-phone-number-input`. Country picker uses a ghost `Button` (with `ChevronsUpDown` icon, matching the visual of a Select trigger) + `Popover` + `Command` + `ScrollArea` for a searchable dropdown. Styling is fully self-contained — no import of `inputVariants` from `blocks/input.tsx`. All new shadcn primitives (popover, command, scroll-area, button, dialog) live in `registry/new-york/ui/` following the existing pattern; not in `components/ui/`.

@@ -11,11 +11,13 @@ export function DocExample({
   description,
   code,
   children,
+  actions,
 }: {
   title: string
   description?: React.ReactNode
   code: string
   children: React.ReactNode
+  actions?: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -25,7 +27,7 @@ export function DocExample({
           <p>{description}</p>
         )}
       </div>
-      <ComponentPreview code={code}>{children}</ComponentPreview>
+      <ComponentPreview code={code} actions={actions}>{children}</ComponentPreview>
     </div>
   )
 }

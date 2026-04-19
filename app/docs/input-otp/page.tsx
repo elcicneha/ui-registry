@@ -7,9 +7,12 @@ import { CodeBlock } from "@/components/code-block"
 import { ComponentPreview } from "@/components/component-preview"
 import { DocBreadcrumb } from "@/components/doc-breadcrumb"
 import { DocExample } from "@/components/doc-example"
+import { DocsVariantProvider } from "@/components/docs-variant-context"
 import { InstallSection } from "@/components/install-section"
 import { OpenInV0Button } from "@/components/open-in-v0-button"
 import { PropsTable, type PropRow } from "@/components/props-table"
+import { VariantExample } from "@/components/variant-preview"
+import { VariantSelect } from "@/components/variant-select"
 import { loadExampleSource } from "@/lib/docs"
 import { makeCliCommands } from "@/lib/registry"
 import { highlightCode } from "@/lib/highlight-code"
@@ -24,7 +27,7 @@ import AlphanumericExample from "./examples/alphanumeric"
 export const metadata: Metadata = {
   title: "Input OTP",
   description:
-    "A one-time password input with individually boxed character slots, as an alternative to shadcn's default joined pill-style OTP.",
+    "A one-time password input available in two styles — shadcn's joined pill (stock) and individually boxed slots (this registry's custom take).",
 }
 
 const REGISTRY_NAME = "input-otp"
@@ -49,6 +52,13 @@ const compositionCode = `InputOTP
     └── InputOTPSlot`
 
 const inputOTPProps: PropRow[] = [
+  {
+    name: "variant",
+    type: `"boxed" | "joined"`,
+    default: `"boxed"`,
+    description:
+      "Visual style. \"boxed\" renders each slot as an individually rounded box (this registry's take); \"joined\" renders shadcn's stock pill where slots share borders.",
+  },
   {
     name: "maxLength",
     type: "number",
@@ -142,54 +152,55 @@ export default async function InputOTPDocsPage() {
   const manualSourceHtml = await highlightCode(manualSource, "tsx")
 
   return (
-    <div className="flex flex-col gap-12">
-      <DocBreadcrumb title="Input OTP" />
+    <DocsVariantProvider defaultVariant="boxed">
+      <div className="flex flex-col gap-12">
+        <DocBreadcrumb title="Input OTP" />
 
-      <header className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <h1>Input OTP</h1>
-            <p>
-              A one-time password input with individually boxed character
-              slots, as an alternative to shadcn&apos;s default joined
-              pill-style OTP.
-            </p>
+        <header className="flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-2">
+              <h1>Input OTP</h1>
+              <p>
+                A one-time password input available in two styles — shadcn&apos;s
+                joined pill (stock) and individually boxed slots (this
+                registry&apos;s custom take).
+              </p>
+            </div>
+            <OpenInV0Button name={REGISTRY_NAME} />
           </div>
-          <OpenInV0Button name={REGISTRY_NAME} />
-        </div>
-      </header>
+        </header>
 
-      <section className="flex flex-col gap-4">
-        <h2 id="preview">Preview</h2>
-        <ComponentPreview code={basicCode}>
-          <BasicExample />
-        </ComponentPreview>
-      </section>
+        <section className="flex flex-col gap-4">
+          <h2 id="preview">Preview</h2>
+          <ComponentPreview code={basicCode} actions={<VariantSelect />}>
+            <VariantExample Example={BasicExample} />
+          </ComponentPreview>
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 id="installation">Installation</h2>
-        <InstallSection
-          cliCommands={makeCliCommands(REGISTRY_NAME)}
-          deps={NPM_DEPENDENCIES}
-          source={manualSource}
-          sourceHtml={manualSourceHtml}
-          sourcePath={MANUAL_TARGET_PATH}
-        />
-      </section>
+        <section className="flex flex-col gap-4">
+          <h2 id="installation">Installation</h2>
+          <InstallSection
+            cliCommands={makeCliCommands(REGISTRY_NAME)}
+            deps={NPM_DEPENDENCIES}
+            source={manualSource}
+            sourceHtml={manualSourceHtml}
+            sourcePath={MANUAL_TARGET_PATH}
+          />
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 id="usage">Usage</h2>
-        <CodeBlock
-          code={`import {
+        <section className="flex flex-col gap-4">
+          <h2 id="usage">Usage</h2>
+          <CodeBlock
+            code={`import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"`}
-          language="tsx"
-        />
-        <CodeBlock
-          code={`<InputOTP maxLength={6}>
+            language="tsx"
+          />
+          <CodeBlock
+            code={`<InputOTP maxLength={6}>
   <InputOTPGroup>
     <InputOTPSlot index={0} />
     <InputOTPSlot index={1} />
@@ -202,134 +213,150 @@ export default async function InputOTPDocsPage() {
     <InputOTPSlot index={5} />
   </InputOTPGroup>
 </InputOTP>`}
-          language="tsx"
-        />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 id="composition">Composition</h2>
-        <p>
-          Use the following composition to build an{" "}
-          <code>InputOTP</code>:
-        </p>
-        <CodeBlock code={compositionCode} language="tsx" />
-      </section>
-
-      <section className="flex flex-col gap-8">
-        <h2 id="examples">Examples</h2>
-
-        <div className="flex flex-col gap-12">
-          <DocExample
-            title="With separator"
-            description="Split slots into groups with a visual separator."
-            code={separatorCode}
-          >
-            <SeparatorExample />
-          </DocExample>
-
-          <DocExample
-            title="Digits only"
-            description="Restrict input to numeric characters using the pattern prop."
-            code={digitsOnlyCode}
-          >
-            <DigitsOnlyExample />
-          </DocExample>
-
-          <DocExample
-            title="Disabled"
-            description="Non-interactive state for read-only or loading contexts."
-            code={disabledCode}
-          >
-            <DisabledExample />
-          </DocExample>
-
-          <DocExample
-            title="Controlled"
-            description="Bind value and onChange to track the OTP in your own state. The live value is displayed below the input."
-            code={controlledCode}
-          >
-            <ControlledExample />
-          </DocExample>
-
-          <DocExample
-            title="Invalid"
-            description="Pass aria-invalid to each InputOTPSlot to show the error styles. Fill all six slots to see the destructive state."
-            code={invalidCode}
-          >
-            <InvalidExample />
-          </DocExample>
-
-          <DocExample
-            title="Alphanumeric"
-            description="Accept both letters and digits by passing the REGEXP_ONLY_DIGITS_AND_CHARS pattern. Special characters are rejected."
-            code={alphanumericCode}
-          >
-            <AlphanumericExample />
-          </DocExample>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-6">
-        <h2 id="api-reference">API Reference</h2>
-
-        <div className="flex flex-col gap-3">
-          <h3 id="inputotp">InputOTP</h3>
+            language="tsx"
+          />
           <p>
-            Root component. Accepts every prop from the underlying{" "}
-            <code>OTPInput</code> in{" "}
-            <code>input-otp</code> — the most
-            relevant are listed below.
+            Pass <code>variant=&quot;joined&quot;</code> to opt into
+            shadcn&apos;s stock pill styling. Omit it (or pass{" "}
+            <code>&quot;boxed&quot;</code>) for this registry&apos;s default
+            look.
           </p>
-          <PropsTable rows={inputOTPProps} />
-        </div>
+          <CodeBlock
+            code={`<InputOTP maxLength={6} variant="joined">
+  <InputOTPGroup>
+    <InputOTPSlot index={0} />
+    <InputOTPSlot index={1} />
+    <InputOTPSlot index={2} />
+    <InputOTPSlot index={3} />
+    <InputOTPSlot index={4} />
+    <InputOTPSlot index={5} />
+  </InputOTPGroup>
+</InputOTP>`}
+            language="tsx"
+          />
+        </section>
 
-        <div className="flex flex-col gap-3">
-          <h3 id="inputotpslot">InputOTPSlot</h3>
+        <section className="flex flex-col gap-4">
+          <h2 id="composition">Composition</h2>
           <p>
-            A single character slot. Renders the character, active ring, and
-            blinking caret.
+            Use the following composition to build an <code>InputOTP</code>:
           </p>
-          <PropsTable rows={inputOTPSlotProps} />
-        </div>
+          <CodeBlock code={compositionCode} language="tsx" />
+        </section>
 
-        <div className="flex flex-col gap-3">
-          <h3 id="inputotpgroup-inputotpseparator">
-            InputOTPGroup &amp; InputOTPSeparator
-          </h3>
-          <p>
-            Layout helpers.{" "}
-            <code>InputOTPGroup</code> wraps
-            related slots;{" "}
-            <code>InputOTPSeparator</code>{" "}
-            renders a dot between groups. Both forward standard{" "}
-            <code>div</code> props.
-          </p>
-        </div>
-      </section>
+        <section className="flex flex-col gap-8">
+          <h2 id="examples">Examples</h2>
 
-      <section className="flex flex-col gap-3">
-        <h2 id="accessibility">Accessibility</h2>
-        <ul>
-          <li>
-            Full keyboard navigation — typing, backspace, arrow keys, and
-            paste all work as expected.
-          </li>
-          <li>
-            Slots expose{" "}
-            <code>data-active</code> for focus
-            state and honor{" "}
-            <code>aria-invalid</code> for error
-            styling.
-          </li>
-          <li>
-            The separator is rendered with{" "}
-            <code>
-              role=&quot;separator&quot;
-            </code>{" "}
-            so it is announced correctly.
-          </li>
-        </ul>
-      </section>
-    </div>
+          <div className="flex flex-col gap-12">
+            <DocExample
+              title="With separator"
+              description="Split slots into groups with a visual separator."
+              code={separatorCode}
+              actions={<VariantSelect />}
+            >
+              <VariantExample Example={SeparatorExample} />
+            </DocExample>
+
+            <DocExample
+              title="Digits only"
+              description="Restrict input to numeric characters using the pattern prop."
+              code={digitsOnlyCode}
+              actions={<VariantSelect />}
+            >
+              <VariantExample Example={DigitsOnlyExample} />
+            </DocExample>
+
+            <DocExample
+              title="Disabled"
+              description="Non-interactive state for read-only or loading contexts."
+              code={disabledCode}
+              actions={<VariantSelect />}
+            >
+              <VariantExample Example={DisabledExample} />
+            </DocExample>
+
+            <DocExample
+              title="Controlled"
+              description="Bind value and onChange to track the OTP in your own state. The live value is displayed below the input."
+              code={controlledCode}
+              actions={<VariantSelect />}
+            >
+              <VariantExample Example={ControlledExample} />
+            </DocExample>
+
+            <DocExample
+              title="Invalid"
+              description="Pass aria-invalid to each InputOTPSlot to show the error styles. Fill all six slots to see the destructive state."
+              code={invalidCode}
+              actions={<VariantSelect />}
+            >
+              <VariantExample Example={InvalidExample} />
+            </DocExample>
+
+            <DocExample
+              title="Alphanumeric"
+              description="Accept both letters and digits by passing the REGEXP_ONLY_DIGITS_AND_CHARS pattern. Special characters are rejected."
+              code={alphanumericCode}
+              actions={<VariantSelect />}
+            >
+              <VariantExample Example={AlphanumericExample} />
+            </DocExample>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-6">
+          <h2 id="api-reference">API Reference</h2>
+
+          <div className="flex flex-col gap-3">
+            <h3 id="inputotp">InputOTP</h3>
+            <p>
+              Root component. Accepts every prop from the underlying{" "}
+              <code>OTPInput</code> in <code>input-otp</code> — the most
+              relevant are listed below.
+            </p>
+            <PropsTable rows={inputOTPProps} />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h3 id="inputotpslot">InputOTPSlot</h3>
+            <p>
+              A single character slot. Renders the character, active ring, and
+              blinking caret.
+            </p>
+            <PropsTable rows={inputOTPSlotProps} />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h3 id="inputotpgroup-inputotpseparator">
+              InputOTPGroup &amp; InputOTPSeparator
+            </h3>
+            <p>
+              Layout helpers. <code>InputOTPGroup</code> wraps related slots;{" "}
+              <code>InputOTPSeparator</code> renders a dot between groups. Both
+              forward standard <code>div</code> props.
+            </p>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 id="accessibility">Accessibility</h2>
+          <ul>
+            <li>
+              Full keyboard navigation — typing, backspace, arrow keys, and
+              paste all work as expected.
+            </li>
+            <li>
+              Slots expose <code>data-active</code> for focus state and honor{" "}
+              <code>aria-invalid</code> for error styling.
+            </li>
+            <li>
+              The separator is rendered with{" "}
+              <code>role=&quot;separator&quot;</code> so it is announced
+              correctly.
+            </li>
+          </ul>
+        </section>
+      </div>
+    </DocsVariantProvider>
   )
 }

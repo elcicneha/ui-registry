@@ -13,20 +13,25 @@ export function ComponentPreview({
   code,
   className,
   previewClassName,
+  actions,
 }: {
   children: React.ReactNode
   code: string
   className?: string
   previewClassName?: string
+  actions?: React.ReactNode
 }) {
   return (
     <div className={cn("", className)}>
       <div
         className={cn(
-          "flex min-h-[260px] items-center justify-center rounded-t-lg border bg-card p-10",
+          "relative flex min-h-[260px] items-center justify-center rounded-t-lg border bg-card p-10",
           previewClassName
         )}
       >
+        {actions && (
+          <div className="absolute right-3 top-3">{actions}</div>
+        )}
         {children}
       </div>
       <CodeBlock

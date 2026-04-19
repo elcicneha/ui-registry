@@ -17,7 +17,7 @@ export const registryItems: RegistryItem[] = [
     name: "input-otp",
     title: "Input OTP",
     description:
-      "A one-time password input with individually boxed character slots.",
+      "A one-time password input in two styles — shadcn's joined pill or individually boxed slots — selectable via a variant prop.",
     href: "/docs/input-otp",
     // status: "stable",
   },

@@ -7,9 +7,13 @@ import {
   InputOTPSlot,
 } from "@/registry/new-york/blocks/input-otp/input-otp"
 
-export default function SeparatorExample() {
+export default function SeparatorExample({
+  variant = "boxed",
+}: {
+  variant?: "boxed" | "joined"
+}) {
   return (
-    <InputOTP maxLength={6}>
+    <InputOTP maxLength={6} variant={variant}>
       <InputOTPGroup>
         <InputOTPSlot index={0} />
         <InputOTPSlot index={1} />
