@@ -4,6 +4,23 @@ A running log of architectural and product decisions. Each entry: what we decide
 
 ---
 
+## 2026-04-27 — `input-phone` no longer strips `+cc` on blur
+
+**Decision.** Removed the blur-time `stripCountryCode` hack (and its sibling autofill stripper) from `input-phone.tsx`. The input now always shows the library's native international format (e.g. `+1 (234) 320-3423`) regardless of focus state. `PhoneInputField` is back to a thin forwardRef wrapping the `<input>`; only the modifier+delete keydown guard remains.
+
+**Context.** The strip rewrote `el.value` to the parsed national number on blur and dispatched a synthetic `input` event so the library reformatted to `(234) 320-3423`. This worked visually but desynced the library's internal `phoneDigits` state from its assumptions: deleting a digit during a re-edit dropped the partial E.164 below 10 digits, and `getCountryForPartialE164Number` returned `undefined` (no `defaultCountry` or `latestCountrySelectedByUser` fallback) — clearing the country selector. Typing the digit back then prepended `+` (per the library's no-country branch), and `+234…` re-parsed as Nigeria. Manual country selection didn't hit the bug because clicking the picker sets `latestCountrySelectedByUser`, which the fallback chain *does* check.
+
+**Options considered.**
+- **A. Strip on blur, restore `+cc` on focus.** Fixes the state desync at the cost of a visible jump on every focus and caret-position fiddling. Worst UX of the three.
+- **B. Keep stripping, add `defaultCountry` tracking via `onCountryChange`.** Promotes the library's auto-detected country to a sticky fallback so partial edits don't clear it. Works, but indirect — relies on a specific line in the library's country-resolution chain ([phoneInputHelpers.js:394](node_modules/react-phone-number-input/modules/helpers/phoneInputHelpers.js#L394)) and continues fighting the library's design.
+- **C. Don't strip (chosen).** Library works exactly as designed; zero surface for editing bugs; `stripCountryCode` and the autofill `useEffect` both go away. Tradeoff: the input shows `+1` even though the country selector already shows `+1` next to the flag — visual redundancy.
+
+**Why.** The strip was an aesthetic override that delivered a real bug class on every re-edit of an auto-detected number. The redundancy in option C is honest — the country code is part of the number — and the simplification is significant (removed function, removed effect, removed inner ref). If the redundancy ever needs to go, the right place to fix it is the country selector button (hide the `+cc` text when a number is present, since the flag carries the same info), not the input.
+
+**Related files.** `registry/new-york/blocks/input-phone/input-phone.tsx`.
+
+---
+
 ## 2026-04-19 — `input-otp` rebuilt on shadcn stock, with a `variant` prop
 
 **Decision.** The `input-otp` block is now the freshly-installed shadcn stock source with a single addition: a `variant?: "boxed" | "joined"` prop on `InputOTP` that propagates via React context to `InputOTPGroup` and `InputOTPSlot`. `"boxed"` remains the default, so existing consumers see no visual change. `"joined"` reproduces shadcn's stock pill styling verbatim. Installed pristine copy lives at `registry/new-york/ui/input-otp.tsx` as reference; nothing imports from it — the block stays self-contained.

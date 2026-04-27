@@ -66,69 +66,10 @@ const InputPhone = React.forwardRef<
 })
 InputPhone.displayName = "InputPhone"
 
-// Strips the +cc prefix from el.value by rewriting it to the parsed national
-// number. When onlyIfPossible is true (blur case) only strips if the library
-// confirms the number is complete — avoids cutting off mid-typed input.
-// Returns true when a strip occurred; caller re-triggers onChange as needed.
-function stripCountryCode(
-  el: HTMLInputElement,
-  onlyIfPossible = false,
-): boolean {
-  if (!el.value.startsWith("+")) return false
-  try {
-    const parsed = RPNInput.parsePhoneNumber(el.value)
-    if (parsed?.nationalNumber) {
-      if (onlyIfPossible && !parsed.isPossible()) return false
-      const nativeSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )?.set
-      nativeSetter?.call(el, parsed.nationalNumber)
-      return true
-    }
-  } catch {
-    // Partial / unparseable — leave it alone
-  }
-  return false
-}
-
 const PhoneInputField = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<"input">
->(({ className, autoComplete, onBlur, onKeyDown, ...props }, ref) => {
-  const innerRef = React.useRef<HTMLInputElement>(null)
-
-  const setRef = React.useCallback(
-    (node: HTMLInputElement | null) => {
-      ; (innerRef as React.RefObject<HTMLInputElement | null>).current =
-        node
-      if (typeof ref === "function") ref(node)
-      else if (ref)
-        (ref as React.RefObject<HTMLInputElement | null>).current = node
-    },
-    [ref],
-  )
-
-  // Strip +cc immediately on autofill — detected by inputType being absent or
-  // "insertReplacementText". The original event continues bubbling to React
-  // with the already-updated el.value, so the library formats it normally.
-  React.useEffect(() => {
-    const el = innerRef.current
-    if (!el) return
-    const handleAutoFill = (e: Event) => {
-      const { inputType } = e as InputEvent
-      if (
-        !inputType ||
-        inputType === "insertReplacementText" ||
-        inputType === "insertFromPaste"
-      ) {
-        stripCountryCode(el)
-      }
-    }
-    el.addEventListener("input", handleAutoFill)
-    return () => el.removeEventListener("input", handleAutoFill)
-  }, [])
-
+>(({ className, autoComplete, onKeyDown, ...props }, ref) => {
   // input-format (used by react-phone-number-input's smart-caret mode) intercepts
   // ALL Backspace/Delete keydowns and calls preventDefault(), which hijacks
   // browser-native modifier+delete shortcuts (Cmd+Backspace = delete to line start,
@@ -142,24 +83,11 @@ const PhoneInputField = React.forwardRef<
     onKeyDown?.(e)
   }
 
-  // Strip +cc on blur only when the library confirms a complete number
-  // (parsePhoneNumber succeeded + isPossible). Partial mid-typed input is left
-  // untouched so the user can continue editing after re-focusing.
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (stripCountryCode(e.target, true)) {
-      // Dispatch a fresh input event so the library re-processes the stripped
-      // value (no pending event to piggyback on at blur time).
-      e.target.dispatchEvent(new Event("input", { bubbles: true }))
-    }
-    onBlur?.(e)
-  }
-
   return (
     <input
       data-slot="input-phone-field"
-      ref={setRef}
+      ref={ref}
       autoComplete={autoComplete ?? "tel"}
-      onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       className={cn(
         "flex-1 min-w-0 bg-transparent px-3 py-1 text-base outline-none",
