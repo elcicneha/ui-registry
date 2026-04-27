@@ -1,11 +1,13 @@
 import * as React from "react"
 import InputOTPBasic from "@/app/docs/input-otp/examples/basic"
 import InputPhoneBasic from "@/app/docs/input-phone/examples/basic"
+import ReferenceRangeBasic from "@/app/docs/reference-range/examples/basic"
 
 // When adding a new component, add an entry here.
 const previews: Record<string, React.ComponentType> = {
   "input-otp": InputOTPBasic,
   "input-phone": InputPhoneBasic,
+  "reference-range": ReferenceRangeBasic,
 }
 
 export default async function PreviewPage({

@@ -22,6 +22,11 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-range-1: var(--range-1);
+  --color-range-2: var(--range-2);
+  --color-range-3: var(--range-3);
+  --color-range-4: var(--range-4);
+  --color-range-5: var(--range-5);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -103,6 +108,12 @@
   --chart-3: oklch(0.466 0.025 107.3);
   --chart-4: oklch(0.394 0.023 107.4);
   --chart-5: oklch(0.286 0.016 107.4);
+  /* Severity scale 1 (very bad) → 5 (excellent). Used by reference-range. */
+  --range-1: oklch(0.62 0.20 25);
+  --range-2: oklch(0.72 0.16 32);
+  --range-3: oklch(0.82 0.14 80);
+  --range-4: oklch(0.80 0.15 145);
+  --range-5: oklch(0.62 0.17 150);
   --radius: 0.625rem;
   --dot-grid-color: color-mix(in oklch, var(--primary) 35%, transparent);
   --sidebar: oklch(0.988 0.003 106.5);
@@ -140,6 +151,11 @@
   --chart-3: oklch(0.466 0.025 107.3);
   --chart-4: oklch(0.394 0.023 107.4);
   --chart-5: oklch(0.286 0.016 107.4);
+  --range-1: oklch(0.60 0.19 25);
+  --range-2: oklch(0.70 0.15 32);
+  --range-3: oklch(0.80 0.14 80);
+  --range-4: oklch(0.78 0.16 145);
+  --range-5: oklch(0.62 0.18 150);
   --sidebar: oklch(0.228 0.013 107.4);
   --sidebar-foreground: oklch(0.988 0.003 106.5);
   --sidebar-primary: oklch(0.723 0.219 149.579);

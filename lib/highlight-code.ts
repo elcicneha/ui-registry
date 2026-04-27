@@ -7,7 +7,7 @@ const THEMES = {
   dark: "github-dark",
 } as const
 
-const LANGS = ["tsx", "bash", "json"] as const
+const LANGS = ["tsx", "bash", "json", "css"] as const
 
 const cache = new LRUCache<string, string>({
   max: 500,

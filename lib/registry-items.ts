@@ -29,4 +29,12 @@ export const registryItems: RegistryItem[] = [
     href: "/docs/input-phone",
     // status: "stable",
   },
+  {
+    name: "reference-range",
+    title: "Reference Range",
+    description:
+      "A segmented bar that places a value against ordered zones — for lab results, credit scores, AQI, and other severity-coded readings.",
+    href: "/docs/reference-range",
+    status: "new",
+  },
 ]
