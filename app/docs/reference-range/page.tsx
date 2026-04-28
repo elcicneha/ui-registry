@@ -16,13 +16,14 @@ import { highlightCode } from "@/lib/highlight-code"
 import BasicExample from "./examples/basic"
 import EqualDistributionExample from "./examples/equal-distribution"
 import OpenEndedExample from "./examples/open-ended"
-import TwoZoneBinaryExample from "./examples/two-zone-binary"
+import LabeledZonesExample from "./examples/labeled-zones"
+import CustomFormattingExample from "./examples/custom-formatting"
 import CustomPointerExample from "./examples/custom-pointer"
 
 export const metadata: Metadata = {
   title: "Reference Range",
   description:
-    "A horizontal segmented bar that places a value against an ordered set of zones — useful for blood test results, credit scores, AQI, and other severity-coded readings.",
+    "A horizontal segmented bar that places a value against an ordered set of zones — useful for blood test results, credit scores, AQI, battery health, and other severity-coded readings.",
 }
 
 const REGISTRY_NAME = "reference-range"
@@ -82,7 +83,13 @@ const referenceRangeProps: PropRow[] = [
     name: "renderPointer",
     type: "(ctx) => ReactNode",
     description:
-      "Replace the default triangle pointer. Receives { value, color, percent, range }.",
+      "Replace the default triangle pointer. Receives { value, color, percent (0–100), range }.",
+  },
+  {
+    name: "ranges[].label",
+    type: "string",
+    description:
+      "Optional zone label. Shown as a tooltip on hover; render it visually too if you want it always visible.",
   },
   {
     name: "renderSegment",
@@ -140,14 +147,16 @@ export default async function ReferenceRangeDocsPage() {
     basicCode,
     equalDistributionCode,
     openEndedCode,
-    twoZoneBinaryCode,
+    labeledZonesCode,
+    customFormattingCode,
     customPointerCode,
   ] = await Promise.all([
     loadManualSource(),
     loadExampleSource("app/docs/reference-range/examples/basic.tsx"),
     loadExampleSource("app/docs/reference-range/examples/equal-distribution.tsx"),
     loadExampleSource("app/docs/reference-range/examples/open-ended.tsx"),
-    loadExampleSource("app/docs/reference-range/examples/two-zone-binary.tsx"),
+    loadExampleSource("app/docs/reference-range/examples/labeled-zones.tsx"),
+    loadExampleSource("app/docs/reference-range/examples/custom-formatting.tsx"),
     loadExampleSource("app/docs/reference-range/examples/custom-pointer.tsx"),
   ])
 
@@ -193,13 +202,10 @@ export default async function ReferenceRangeDocsPage() {
       <section className="flex flex-col gap-4">
         <h2 id="color-tokens">Color tokens</h2>
         <p>
-          The component does no token resolution — <code>color</code> is passed
-          straight to <code>backgroundColor</code>. Pass any valid CSS color
-          (hex, oklch, hsl) or a CSS variable reference. The starter kit below
-          adds five severity tokens (<code>--range-1</code> through{" "}
-          <code>--range-5</code>) you can paste into your{" "}
-          <code>globals.css</code>. Rename them, delete them, or add more — the
-          component never references the names.
+          <code>color</code> is passed straight to <code>backgroundColor</code>{" "}
+          — any valid CSS color works (hex, oklch, hsl, or a <code>var()</code>{" "}
+          reference). The starter kit below defines five severity tokens you
+          can paste into <code>globals.css</code>.
         </p>
         <CodeBlock code={tokenSnippet} language="css" />
       </section>
@@ -224,6 +230,10 @@ export default async function ReferenceRangeDocsPage() {
 />`}
           language="tsx"
         />
+        <p>
+          Boundaries are <code>[start, end)</code> — start inclusive, end
+          exclusive. The last range is inclusive on both sides.
+        </p>
       </section>
 
       <section className="flex flex-col gap-8">
@@ -233,12 +243,10 @@ export default async function ReferenceRangeDocsPage() {
             title="Open-ended bookends"
             description={
               <>
-                Real lab reports usually express the extreme zones as{" "}
-                <code>{"< X"}</code> or <code>{"> Y"}</code>. Pass{" "}
-                <code>start: null</code> or <code>end: null</code> and the
-                component sizes those segments using the average width of the
-                closed segments. If the value falls outside, the open segment
-                stretches to fit with a 5% margin.
+                Pass <code>start: null</code> or <code>end: null</code> for{" "}
+                <code>{"< X"}</code> / <code>{"> Y"}</code> bookends. Open
+                segments size to the average closed-segment width, and stretch
+                if the value overflows the declared domain.
               </>
             }
             code={openEndedCode}
@@ -251,9 +259,7 @@ export default async function ReferenceRangeDocsPage() {
             description={
               <>
                 Use <code>distribution=&quot;equal&quot;</code> when narrow
-                clinical zones get squeezed too thin to read, or when zone
-                count matters more than numeric width. Tick labels stay
-                numerically correct.
+                zones get squeezed too thin. Ticks stay numerically positioned.
               </>
             }
             code={equalDistributionCode}
@@ -262,25 +268,38 @@ export default async function ReferenceRangeDocsPage() {
           </DocExample>
 
           <DocExample
-            title="Two-zone binary"
+            title="Labeled zones with custom ticks"
             description={
               <>
-                A minimal good/bad case. Pick any two of the shipped tokens or
-                use raw colors — there&apos;s no requirement to use all five.
+                Add a <code>label</code> per range to show on hover, and pass{" "}
+                <code>tickLabels</code> as an explicit array to control which
+                boundaries are annotated.
               </>
             }
-            code={twoZoneBinaryCode}
+            code={labeledZonesCode}
           >
-            <TwoZoneBinaryExample />
+            <LabeledZonesExample />
+          </DocExample>
+
+          <DocExample
+            title="Custom formatting"
+            description={
+              <>
+                Use <code>formatValue</code> and <code>formatTick</code> to
+                control how the pointer value and tick labels render.
+              </>
+            }
+            code={customFormattingCode}
+          >
+            <CustomFormattingExample />
           </DocExample>
 
           <DocExample
             title="Custom pointer"
             description={
               <>
-                Replace the default triangle pointer via{" "}
-                <code>renderPointer</code>. The render function receives{" "}
-                <code>{"{ value, color, percent, range }"}</code>.
+                Replace the default triangle via <code>renderPointer</code>.
+                Receives <code>{"{ value, color, percent, range }"}</code>.
               </>
             }
             code={customPointerCode}
@@ -296,13 +315,11 @@ export default async function ReferenceRangeDocsPage() {
         <div className="flex flex-col gap-3">
           <h3 id="referencerange">ReferenceRange</h3>
           <p>
-            A flat, data-driven component. <code>ranges</code> is an array of{" "}
-            <code>{"{ start, end, color, label? }"}</code> entries.{" "}
-            <code>start</code> and <code>end</code> are inclusive on the start
-            and exclusive on the end (<code>[start, end)</code>); the last
-            range is fully inclusive. <code>color</code> is a pass-through CSS
-            string — token reference, hex, oklch, anything valid for{" "}
-            <code>background-color</code>.
+            <code>ranges</code> is an array of{" "}
+            <code>{"{ start, end, color, label? }"}</code> entries with{" "}
+            <code>[start, end)</code> boundaries (last range inclusive on both
+            sides). In development, the component logs a console warning if
+            adjacent ranges leave a gap or overlap.
           </p>
           <PropsTable rows={referenceRangeProps} />
         </div>
@@ -312,19 +329,19 @@ export default async function ReferenceRangeDocsPage() {
         <h2 id="accessibility">Accessibility</h2>
         <ul>
           <li>
-            The bar carries <code>role=&quot;img&quot;</code> with an{" "}
-            <code>aria-label</code> that announces the current value and unit.
+            The bar has <code>role=&quot;img&quot;</code> with an{" "}
+            <code>aria-label</code> announcing the value and unit — but{" "}
+            <strong>not</strong> the zone. Render the active zone&apos;s name
+            as text alongside the bar so screen readers and color-blind users
+            get the severity, not just the number.
           </li>
           <li>
-            The pointer triangle is marked <code>aria-hidden</code> — it is
-            decorative; the value text and bar label communicate the reading.
+            The pointer is <code>aria-hidden</code> — decorative.
           </li>
           <li>
-            Color alone should not be the sole signal of severity. Pair the
-            component with a textual label (e.g. &ldquo;High&rdquo;,
-            &ldquo;Borderline&rdquo;) for users who can&apos;t distinguish the
-            range hues. The optional <code>label</code> field on each range is
-            surfaced as a tooltip; consider rendering it visually too.
+            <code>label</code> values appear as tooltips on hover (desktop
+            only). Render them visually too if always-visible labels matter on
+            touch devices.
           </li>
         </ul>
       </section>
