@@ -51,6 +51,34 @@ export interface ReferenceRangeProps {
 // The last range is [start, end] (inclusive on both sides since nothing follows).
 const referenceRangeVariants = cva(["w-full"])
 
+// Pointer geometry shared between the rendered SVG and the bar's mask cutout.
+// These constants are the single source of truth — the pointer's wrapper
+// position and the mask cutout's position are both derived from them, so
+// editing one of these moves both visuals in lock-step.
+const POINTER_PATH_D =
+  "M4 2 L10 2 Q12 2 10.84 3.63 L8.16 7.37 Q7 9 5.84 7.37 L3.16 3.63 Q2 2 4 2 Z"
+const POINTER_VIEWBOX = "0 0 14 11"
+const POINTER_W = 20
+const POINTER_H = 16
+// Vertical offset of the pointer SVG's top relative to the bar's top edge (px).
+// Negative = pointer lifts above the bar; positive = pointer sinks into it.
+// Tweak this to retune how deep the pointer slots into the bar.
+const POINTER_Y = -10
+// Visible gap between the pointer fill and the surrounding bar segment (px).
+// This is the "stroke width equivalent" — tune it to make the halo tighter
+// or looser. Converted to viewBox units below for the SVG stroke.
+const POINTER_GAP_PX = 2
+// SVG stroke is centered on the path edge, so a desired outset of GAP_PX
+// needs a stroke of 2*GAP_PX in render space. The cutout SVG uses
+// preserveAspectRatio='none' so the stroke stretches non-uniformly; we
+// approximate with the average of x and y scale — close enough given the
+// path is mostly curved/diagonal.
+const POINTER_CUTOUT_STROKE =
+  (2 * POINTER_GAP_PX) / ((POINTER_W / 14 + POINTER_H / 11) / 2)
+
+const POINTER_CUTOUT_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='${POINTER_VIEWBOX}' width='${POINTER_W}' height='${POINTER_H}' preserveAspectRatio='none'><path d='${POINTER_PATH_D}' fill='white' stroke='white' stroke-width='${POINTER_CUTOUT_STROKE}' stroke-linejoin='round' paint-order='stroke'/></svg>`
+const POINTER_CUTOUT_URI = `url("data:image/svg+xml;utf8,${encodeURIComponent(POINTER_CUTOUT_SVG)}")`
+
 const identity = (v: number) => String(v)
 
 function clamp(v: number, lo: number, hi: number) {
@@ -190,7 +218,7 @@ function ReferenceRange({
     return { frac, idx, local }
   }
 
-  const valueToCalcLeft = (v: number) => {
+  const valueToCalcLeft = (v: number, offsetPx = 0) => {
     const { frac, idx, local } = valueToCumulativeFraction(v)
     // Boundary values (local === 0 with idx > 0, or local === 1 with idx < N-1)
     // sit in the visual gap between adjacent segments. Center them in the gap
@@ -199,7 +227,9 @@ function ReferenceRange({
     let gapOffset = idx * GAP_PX
     if (local === 0 && idx > 0) gapOffset -= GAP_PX / 2
     else if (local === 1 && idx < N - 1) gapOffset += GAP_PX / 2
-    return `calc(${frac * 100}% - ${frac * (N - 1) * GAP_PX}px + ${gapOffset}px)`
+    const pxPart = -frac * (N - 1) * GAP_PX + gapOffset + offsetPx
+    const sign = pxPart >= 0 ? "+" : "-"
+    return `calc(${frac * 100}% ${sign} ${Math.abs(pxPart)}px)`
   }
 
   const pointerIndex = clamp(findRangeIndex(value), 0, ranges.length - 1)
@@ -232,6 +262,8 @@ function ReferenceRange({
   // during paint — no JS on viewport resize.
   const headerRef = React.useRef<HTMLDivElement>(null)
   const valueRef = React.useRef<HTMLSpanElement>(null)
+  const barRef = React.useRef<HTMLDivElement>(null)
+  const [barWidth, setBarWidth] = React.useState(0)
   React.useLayoutEffect(() => {
     const header = headerRef.current
     const label = valueRef.current
@@ -245,6 +277,34 @@ function ReferenceRange({
     ro.observe(label)
     return () => ro.disconnect()
   }, [showValue, renderPointer])
+
+  // Measure the bar's pixel width so the mask cutout can be positioned in
+  // pure pixels — `mask-position` interprets percentages via an alignment
+  // rule that doesn't compose cleanly with calc, so we sidestep it.
+  React.useLayoutEffect(() => {
+    const bar = barRef.current
+    if (!bar) return
+    const update = () => setBarWidth(bar.getBoundingClientRect().width)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(bar)
+    return () => ro.disconnect()
+  }, [])
+
+  const cutoutFracInfo = valueToCumulativeFraction(value)
+  let cutoutGapOffset = cutoutFracInfo.idx * GAP_PX
+  if (cutoutFracInfo.local === 0 && cutoutFracInfo.idx > 0)
+    cutoutGapOffset -= GAP_PX / 2
+  else if (
+    cutoutFracInfo.local === 1 &&
+    cutoutFracInfo.idx < N - 1
+  )
+    cutoutGapOffset += GAP_PX / 2
+  const cutoutLeftPx =
+    barWidth * cutoutFracInfo.frac -
+    cutoutFracInfo.frac * (N - 1) * GAP_PX +
+    cutoutGapOffset -
+    POINTER_W / 2
 
   const clampedValueLeft = `clamp(var(--ref-halfw), ${pointerLeft}, calc(100% - var(--ref-halfw)))`
 
@@ -269,8 +329,14 @@ function ReferenceRange({
           </span>
         )}
         <div
-          className="absolute -bottom-0.5 flex -translate-x-1/2 flex-col items-center"
-          style={{ left: pointerLeft }}
+          className="absolute flex -translate-x-1/2 flex-col items-center"
+          style={{
+            left: pointerLeft,
+            // Wrapper's bottom is derived from POINTER_Y so the SVG top lands
+            // exactly POINTER_Y px from the bar's top edge — same coord that
+            // drives the mask cutout.
+            bottom: -(POINTER_H + POINTER_Y),
+          }}
         >
           {renderPointer ? (
             renderPointer({
@@ -282,19 +348,13 @@ function ReferenceRange({
           ) : (
             <svg
               aria-hidden
-              viewBox="0 0 14 11"
+              viewBox={POINTER_VIEWBOX}
               preserveAspectRatio="none"
-              className="block w-[20px] h-[16px] translate-y-[2px]"
+              width={POINTER_W}
+              height={POINTER_H}
+              className="block"
             >
-              <path
-                d="M4 2 L10 2 Q12 2 10.84 3.63 L8.16 7.37 Q7 9 5.84 7.37 L3.16 3.63 Q2 2 4 2 Z"
-                fill={pointerColor}
-                stroke="var(--background)"
-                strokeWidth="3"
-                strokeLinejoin="round"
-                paintOrder="stroke"
-                vectorEffect="non-scaling-stroke"
-              />
+              <path d={POINTER_PATH_D} fill={pointerColor} />
             </svg>
           )}
         </div>
@@ -302,9 +362,34 @@ function ReferenceRange({
 
       <TooltipProvider>
         <div
+          ref={barRef}
           className="flex w-full gap-1"
           role="img"
           aria-label={`Reference range with current value ${formatValue(value)}${unit ? ` ${unit}` : ""}.`}
+          style={
+            renderPointer
+              ? undefined
+              : {
+                // Cut a pointer-shaped notch out of the top of the bar at
+                // pointerLeft so the page/card backdrop shows through —
+                // gives a background-agnostic gap around the pointer tip
+                // without needing a stroke painted in --background.
+                // Two layers composited via subtract: full-opaque white
+                // (top) minus the pointer cutout (bottom). Layer order is
+                // load-bearing — `subtract` keeps the top layer where the
+                // bottom is transparent, so the pointer must be listed last.
+                WebkitMaskImage: `linear-gradient(#fff, #fff), ${POINTER_CUTOUT_URI}`,
+                WebkitMaskPosition: `left 0 top 0, ${cutoutLeftPx}px ${POINTER_Y}px`,
+                WebkitMaskSize: `100% 100%, ${POINTER_W}px ${POINTER_H}px`,
+                WebkitMaskRepeat: "no-repeat, no-repeat",
+                WebkitMaskComposite: "source-out",
+                maskImage: `linear-gradient(#fff, #fff), ${POINTER_CUTOUT_URI}`,
+                maskPosition: `left 0 top 0, ${cutoutLeftPx}px ${POINTER_Y}px`,
+                maskSize: `100% 100%, ${POINTER_W}px ${POINTER_H}px`,
+                maskRepeat: "no-repeat, no-repeat",
+                maskComposite: "subtract",
+              }
+          }
         >
           {resolved.map((r, i) => {
             const widthPercent =
