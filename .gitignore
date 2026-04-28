@@ -42,3 +42,6 @@ next-env.d.ts
 
 PLANS.md
 PLAN.md
+
+.claude/worktrees/
+

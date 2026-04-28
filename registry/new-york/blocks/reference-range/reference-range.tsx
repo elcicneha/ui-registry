@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva } from "class-variance-authority"
 
@@ -216,12 +218,50 @@ function ReferenceRange({
     ticks = [...tickLabels].sort((a, b) => a - b)
   }
 
+  // Edge clamping for the value label: keep the triangle at the true
+  // pointer position, but clamp the value text so its bounding box never
+  // crosses the container's edges. Implemented as CSS `clamp()` against
+  // a `--ref-halfw` custom property holding half the label's measured
+  // width, updated by a ResizeObserver. The browser handles edge math
+  // during paint — no JS on viewport resize.
+  const headerRef = React.useRef<HTMLDivElement>(null)
+  const valueRef = React.useRef<HTMLSpanElement>(null)
+  React.useLayoutEffect(() => {
+    const header = headerRef.current
+    const label = valueRef.current
+    if (!header || !label) return
+    const update = () => {
+      const w = label.getBoundingClientRect().width
+      header.style.setProperty("--ref-halfw", `${w / 2}px`)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(label)
+    return () => ro.disconnect()
+  }, [showValue, renderPointer])
+
+  const clampedValueLeft = `clamp(var(--ref-halfw), ${pointerLeft}, calc(100% - var(--ref-halfw)))`
+
   return (
     <div className={cn(referenceRangeVariants(), className)}>
       <div
+        ref={headerRef}
         className="relative w-full"
-        style={{ height: showValue || renderPointer ? "1.75rem" : "0.625rem" }}
+        style={{
+          height: showValue || renderPointer ? "1.75rem" : "0.625rem",
+          ["--ref-halfw" as string]: "16px",
+        }}
       >
+        {!renderPointer && showValue && (
+          <span
+            ref={valueRef}
+            className="absolute top-0 -translate-x-1/2 whitespace-nowrap text-xs font-medium text-muted-foreground"
+            style={{ left: clampedValueLeft }}
+          >
+            {formatValue(value)}
+            {unit ? <span className="ml-1">{unit}</span> : null}
+          </span>
+        )}
         <div
           className="absolute -bottom-0.5 flex -translate-x-1/2 flex-col items-center"
           style={{ left: pointerLeft }}
@@ -234,39 +274,22 @@ function ReferenceRange({
               range: pointerRange,
             })
           ) : (
-            <>
-              {showValue && (
-                <span className="mb-0.5 text-xs font-medium text-muted-foreground">
-                  {formatValue(value)}
-                  {unit ? (
-                    <span className="ml-1">{unit}</span>
-                  ) : null}
-                </span>
-              )}
-              {/* Pointer knobs:
-                    - SIZE: the `w-[…] h-[…]` classes. preserveAspectRatio="none"
-                      lets w and h stretch independently.
-                    - CUT DEPTH (overlap into the bar): translate-y-[…px].
-                    - ROUNDNESS: edit the path's L-point offsets from each
-                      corner. Bigger gap between the L point and its corner =
-                      more rounded. Current: ~1.2 viewBox units. */}
-              <svg
-                aria-hidden
-                viewBox="0 0 14 11"
-                preserveAspectRatio="none"
-                className="block w-[20px] h-[16px] translate-y-[2px]"
-              >
-                <path
-                  d="M4 2 L10 2 Q12 2 10.84 3.63 L8.16 7.37 Q7 9 5.84 7.37 L3.16 3.63 Q2 2 4 2 Z"
-                  fill={pointerColor}
-                  stroke="var(--background)"
-                  strokeWidth="3"
-                  strokeLinejoin="round"
-                  paintOrder="stroke"
-                  vectorEffect="non-scaling-stroke"
-                />
-              </svg>
-            </>
+            <svg
+              aria-hidden
+              viewBox="0 0 14 11"
+              preserveAspectRatio="none"
+              className="block w-[20px] h-[16px] translate-y-[2px]"
+            >
+              <path
+                d="M4 2 L10 2 Q12 2 10.84 3.63 L8.16 7.37 Q7 9 5.84 7.37 L3.16 3.63 Q2 2 4 2 Z"
+                fill={pointerColor}
+                stroke="var(--background)"
+                strokeWidth="3"
+                strokeLinejoin="round"
+                paintOrder="stroke"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
           )}
         </div>
       </div>
