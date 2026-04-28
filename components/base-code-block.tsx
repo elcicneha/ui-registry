@@ -71,7 +71,7 @@ function FilenameHeader({
   )
 }
 
-function CodeContent({
+export function CodeContent({
   code,
   highlightedHtml,
   language,

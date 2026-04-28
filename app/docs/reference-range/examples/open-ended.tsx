@@ -9,8 +9,8 @@ export default function OpenEndedExample() {
         unit="mg/dL"
         ranges={[
           { start: null, end: 100, color: "var(--range-5)", label: "Optimal" },
-          { start: 100, end: 130, color: "var(--range-4)", label: "Near optimal" },
-          { start: 130, end: 160, color: "var(--range-3)", label: "Borderline" },
+          { start: 100, end: 115, color: "var(--range-4)", label: "Near optimal" },
+          { start: 115, end: 160, color: "var(--range-3)", label: "Borderline" },
           { start: 160, end: 190, color: "var(--range-2)", label: "High" },
           { start: 190, end: null, color: "var(--range-1)", label: "Very high" },
         ]}

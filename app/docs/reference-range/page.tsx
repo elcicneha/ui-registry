@@ -4,6 +4,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 
 import { CodeBlock } from "@/components/code-block"
+import { CodeBlockColorTokens } from "@/components/code-block-color-tokens"
 import { ComponentPreview } from "@/components/component-preview"
 import { DocBreadcrumb } from "@/components/doc-breadcrumb"
 import { DocExample } from "@/components/doc-example"
@@ -104,15 +105,18 @@ const referenceRangeProps: PropRow[] = [
   },
 ]
 
-const tokenSnippet = `/* Add to your globals.css. Severity scale: 1 = very bad, 5 = excellent.
-   Delete, rename, or add more (--range-6, --range-7) as your domain needs. */
+const TOKEN_HEADER = `/* Add to your globals.css. Severity scale: 1 = very bad, 5 = excellent.
+   Delete, rename, or add more (--range-6, --range-7) as you need. */
 @theme inline {
   --color-range-1: var(--range-1);
   --color-range-2: var(--range-2);
   --color-range-3: var(--range-3);
   --color-range-4: var(--range-4);
   --color-range-5: var(--range-5);
-}
+}`
+
+const tokenSnippets = {
+  oklch: `${TOKEN_HEADER}
 
 :root {
   --range-1: oklch(0.62 0.20 25);
@@ -128,7 +132,59 @@ const tokenSnippet = `/* Add to your globals.css. Severity scale: 1 = very bad, 
   --range-3: oklch(0.80 0.14 80);
   --range-4: oklch(0.78 0.16 145);
   --range-5: oklch(0.62 0.18 150);
-}`
+}`,
+  hex: `${TOKEN_HEADER}
+
+:root {
+  --range-1: #e64343;
+  --range-2: #f87962;
+  --range-3: #f3b94c;
+  --range-4: #7bd77f;
+  --range-5: #03a14a;
+}
+
+.dark {
+  --range-1: #db4241;
+  --range-2: #ed7761;
+  --range-3: #edb345;
+  --range-4: #6ed274;
+  --range-5: #00a245;
+}`,
+  rgb: `${TOKEN_HEADER}
+
+:root {
+  --range-1: rgb(230 67 67);
+  --range-2: rgb(248 121 98);
+  --range-3: rgb(243 185 76);
+  --range-4: rgb(123 215 127);
+  --range-5: rgb(3 161 74);
+}
+
+.dark {
+  --range-1: rgb(219 66 65);
+  --range-2: rgb(237 119 97);
+  --range-3: rgb(237 179 69);
+  --range-4: rgb(110 210 116);
+  --range-5: rgb(0 162 69);
+}`,
+  hsl: `${TOKEN_HEADER}
+
+:root {
+  --range-1: hsl(0 77% 58%);
+  --range-2: hsl(9 91% 68%);
+  --range-3: hsl(39 87% 63%);
+  --range-4: hsl(123 53% 66%);
+  --range-5: hsl(147 96% 32%);
+}
+
+.dark {
+  --range-1: hsl(0 68% 56%);
+  --range-2: hsl(9 80% 65%);
+  --range-3: hsl(39 82% 60%);
+  --range-4: hsl(124 53% 63%);
+  --range-5: hsl(146 100% 32%);
+}`,
+}
 
 async function loadManualSource() {
   try {
@@ -161,6 +217,15 @@ export default async function ReferenceRangeDocsPage() {
   ])
 
   const manualSourceHtml = await highlightCode(manualSource, "tsx")
+
+  const tokenSnippetsHighlighted = Object.fromEntries(
+    await Promise.all(
+      Object.entries(tokenSnippets).map(async ([key, code]) => [
+        key,
+        await highlightCode(code, "css"),
+      ])
+    )
+  ) as Record<keyof typeof tokenSnippets, string>
 
   return (
     <div className="flex flex-col gap-12">
@@ -207,7 +272,11 @@ export default async function ReferenceRangeDocsPage() {
           reference). The starter kit below defines five severity tokens you
           can paste into <code>globals.css</code>.
         </p>
-        <CodeBlock code={tokenSnippet} language="css" />
+        <CodeBlockColorTokens
+          snippets={tokenSnippets}
+          highlighted={tokenSnippetsHighlighted}
+          maxExpandedHeight="25rem"
+        />
       </section>
 
       <section className="flex flex-col gap-4">
