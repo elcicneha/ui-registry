@@ -83,60 +83,65 @@ async function main() {
   const page = await browser.newPage()
   await page.setViewportSize({ width: 800, height: 320 })
 
+  // Seed localStorage once on the origin so the layout's blocking script
+  // picks the right theme on every subsequent load. Done after a no-op nav
+  // because localStorage isn't writable until we're on the origin.
+  await page.goto(BASE_URL, { waitUntil: "domcontentloaded" })
+
+  // Render the preview at a given theme and capture the target element.
+  // Theme is set in localStorage before navigation so the layout's blocking
+  // script applies it before first paint — this matters because some
+  // components resolve CSS variables to concrete colors at mount via
+  // getComputedStyle, and the React ThemeContext only initializes once.
+  async function captureAt(theme, url) {
+    await page.evaluate((t) => {
+      try {
+        localStorage.setItem("theme", t)
+      } catch {}
+    }, theme)
+    await page.goto(url, { waitUntil: "networkidle" })
+
+    await page.addStyleTag({
+      content: [
+        "nextjs-portal, header, footer { display: none !important; }",
+        "body { display: block !important; min-height: auto !important; }",
+        "main { display: block !important; flex: none !important; }",
+      ].join("\n"),
+    })
+
+    await page.evaluate(() => {
+      const el = document.querySelector("[data-preview-target]")
+      if (!el) return
+
+      el.style.width = "400px"
+
+      const children = Array.from(el.children)
+      const child = children.find((c) => {
+        const r = c.getBoundingClientRect()
+        return r.width > 0 && r.height > 0
+      })
+
+      const componentWidth = (child ?? el).getBoundingClientRect().width
+      const padding = 16 // p-2 = 8px each side
+
+      el.style.width = `${componentWidth + padding}px`
+      el.style.zoom = String(800 / (componentWidth + padding))
+    })
+
+    return page.locator("[data-preview-target]").screenshot()
+  }
+
   try {
     for (const name of components) {
       const url = `${BASE_URL}/preview/${name}`
       const out = path.join(PREVIEWS_DIR, `${name}.png`)
+      const darkOut = path.join(PREVIEWS_DIR, `${name}-dark.png`)
       process.stdout.write(`  ${name}… `)
-      await page.goto(url, { waitUntil: "networkidle" })
 
-      // Strip site chrome (header, footer, flex layout) so the preview
-      // renders as a bare component — matches the layout before the UX
-      // overhaul added these elements to the root layout.
-      await page.addStyleTag({
-        content: [
-          "nextjs-portal, header, footer { display: none !important; }",
-          "body { display: block !important; min-height: auto !important; }",
-          "main { display: block !important; flex: none !important; }",
-        ].join("\n"),
-      })
-
-      // Measure and zoom the component to fill the viewport width.
-      await page.evaluate(() => {
-        const el = document.querySelector("[data-preview-target]")
-        if (!el) return
-
-        // Give the container a definite width so fluid (w-full) components
-        // render at their natural max-width instead of collapsing.
-        el.style.width = "400px"
-
-        // Find the first *visible* child — some libraries (e.g. input-otp)
-        // inject a <noscript> as the first child which has 0×0 dimensions.
-        const children = Array.from(el.children)
-        const child = children.find((c) => {
-          const r = c.getBoundingClientRect()
-          return r.width > 0 && r.height > 0
-        })
-
-        const componentWidth = (child ?? el).getBoundingClientRect().width
-        const padding = 16 // p-2 = 8px each side
-
-        // Shrink container to tightly wrap the component (keeps shadow room).
-        el.style.width = `${componentWidth + padding}px`
-
-        // Zoom the whole thing to fill 800px.
-        el.style.zoom = String(800 / (componentWidth + padding))
-      })
-
-      // --- Light mode screenshot ---
-      await page.evaluate(() => document.documentElement.classList.remove("dark"))
-      const lightBytes = await page.locator("[data-preview-target]").screenshot()
+      const lightBytes = await captureAt("light", url)
       writeFileSync(out, lightBytes)
 
-      // --- Dark mode screenshot ---
-      await page.evaluate(() => document.documentElement.classList.add("dark"))
-      const darkOut = path.join(PREVIEWS_DIR, `${name}-dark.png`)
-      const darkBytes = await page.locator("[data-preview-target]").screenshot()
+      const darkBytes = await captureAt("dark", url)
       writeFileSync(darkOut, darkBytes)
 
       console.log(`saved → public/previews/${name}.png + ${name}-dark.png`)
