@@ -4,6 +4,12 @@ import * as React from "react"
 import { cva } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/registry/new-york/ui/tooltip"
 
 export type ReferenceRangeItem = {
   start: number | null
@@ -294,44 +300,53 @@ function ReferenceRange({
         </div>
       </div>
 
-      <div
-        className="flex w-full gap-1"
-        role="img"
-        aria-label={`Reference range with current value ${formatValue(value)}${unit ? ` ${unit}` : ""}.`}
-      >
-        {resolved.map((r, i) => {
-          const widthPercent =
-            distribution === "equal"
-              ? 100 / resolved.length
-              : ((r.vEnd - r.vStart) / domainSpan) * 100
-          const flexBasis =
-            distribution === "equal" ? 1 : Math.max(r.vEnd - r.vStart, 0.0001)
-          if (renderSegment) {
-            return (
-              <React.Fragment key={i}>
-                {renderSegment({
-                  range: ranges[i],
-                  index: i,
-                  widthPercent,
-                  isOpenStart: r.isOpenStart,
-                  isOpenEnd: r.isOpenEnd,
-                })}
-              </React.Fragment>
+      <TooltipProvider>
+        <div
+          className="flex w-full gap-1"
+          role="img"
+          aria-label={`Reference range with current value ${formatValue(value)}${unit ? ` ${unit}` : ""}.`}
+        >
+          {resolved.map((r, i) => {
+            const widthPercent =
+              distribution === "equal"
+                ? 100 / resolved.length
+                : ((r.vEnd - r.vStart) / domainSpan) * 100
+            const flexBasis =
+              distribution === "equal" ? 1 : Math.max(r.vEnd - r.vStart, 0.0001)
+            if (renderSegment) {
+              return (
+                <React.Fragment key={i}>
+                  {renderSegment({
+                    range: ranges[i],
+                    index: i,
+                    widthPercent,
+                    isOpenStart: r.isOpenStart,
+                    isOpenEnd: r.isOpenEnd,
+                  })}
+                </React.Fragment>
+              )
+            }
+            const segment = (
+              <div
+                className="h-2.5 rounded-full"
+                style={{
+                  flex: flexBasis,
+                  backgroundColor: r.color,
+                }}
+              />
             )
-          }
-          return (
-            <div
-              key={i}
-              className="h-2.5 rounded-full"
-              style={{
-                flex: flexBasis,
-                backgroundColor: r.color,
-              }}
-              title={r.label}
-            />
-          )
-        })}
-      </div>
+            if (!r.label) {
+              return <React.Fragment key={i}>{segment}</React.Fragment>
+            }
+            return (
+              <Tooltip key={i}>
+                <TooltipTrigger asChild>{segment}</TooltipTrigger>
+                <TooltipContent>{r.label}</TooltipContent>
+              </Tooltip>
+            )
+          })}
+        </div>
+      </TooltipProvider>
 
       {tickLabels !== "none" && ticks.length > 0 && (
         <div className="relative mt-1.5 h-4 w-full">

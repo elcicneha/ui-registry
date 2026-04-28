@@ -49,6 +49,7 @@
       "title": "Reference Range",
       "description": "A horizontal segmented bar that places a value against an ordered set of zones — useful for blood-test results, credit scores, AQI, battery health, and other severity-coded readings.",
       "dependencies": ["class-variance-authority"],
+      "registryDependencies": ["tooltip"],
       "files": [
         {
           "path": "registry/new-york/blocks/reference-range/reference-range.tsx",
