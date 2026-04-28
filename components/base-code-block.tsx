@@ -213,25 +213,28 @@ function CollapsibleCodeBlock({
           code={code}
           highlightedHtml={highlightedHtml}
           language={language}
-          className="overflow-x-auto p-4 text-sm leading-relaxed"
+          className={cn(
+            "p-4 text-sm leading-relaxed",
+            open ? "overflow-x-auto" : "overflow-hidden"
+          )}
         />
-        {!open && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-28 items-end justify-center bg-gradient-to-b from-transparent via-background/50 to-background pb-4"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={toggle}
-              className="pointer-events-auto shadow-sm"
-            >
-              {expandLabel}
-            </Button>
-          </div>
-        )}
       </div>
+      {!open && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex h-28 items-end justify-center bg-gradient-to-b from-transparent via-background/50 to-background pb-4"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={toggle}
+            className="pointer-events-auto shadow-sm"
+          >
+            {expandLabel}
+          </Button>
+        </div>
+      )}
     </Collapsible>
   )
 }
