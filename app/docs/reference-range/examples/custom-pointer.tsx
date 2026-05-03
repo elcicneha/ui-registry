@@ -23,7 +23,7 @@ export default function CustomPointerExample() {
           { start: 800, end: 850, color: "var(--range-5)" },
         ]}
         renderPointer={({ value, color }) => (
-          <div className="mb-0 flex flex-col items-center gap-[1px]">
+          <div className="mb-2 flex flex-col items-center gap-[1px]">
             <span
               className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ backgroundColor: color, color: fgByBg[color] }}

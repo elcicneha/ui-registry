@@ -36,9 +36,9 @@ const NPM_DEPENDENCIES = ["class-variance-authority"]
 const referenceRangeProps: PropRow[] = [
   {
     name: "ranges",
-    type: "ReferenceRangeItem[]",
+    type: "[ReferenceRangeFirst, ...ReferenceRangeRest[]]",
     description:
-      "Ordered, ascending list of zones. Each item has start, end, color, and an optional label. Use null on start or end for open-ended bookends like '< 20' or '> 200'.",
+      "Ordered list of zones. Only the first range requires start (use null for open-ended); subsequent ranges derive start from the previous range's end — omit it. Providing a mismatched start throws a runtime error.",
   },
   {
     name: "value",
@@ -291,17 +291,19 @@ export default async function ReferenceRangeDocsPage() {
   unit="mg/dL"
   ranges={[
     { start: null, end: 100, color: "var(--range-5)" },
-    { start: 100, end: 130, color: "var(--range-4)" },
-    { start: 130, end: 160, color: "var(--range-3)" },
-    { start: 160, end: 190, color: "var(--range-2)" },
-    { start: 190, end: null, color: "var(--range-1)" },
+    {              end: 130, color: "var(--range-4)" },
+    {              end: 160, color: "var(--range-3)" },
+    {              end: 190, color: "var(--range-2)" },
+    {              end: null, color: "var(--range-1)" },
   ]}
 />`}
           language="tsx"
         />
         <p>
           Boundaries are <code>[start, end)</code> — start inclusive, end
-          exclusive. The last range is inclusive on both sides.
+          exclusive. The last range is inclusive on both sides. Only the first
+          range takes <code>start</code>; subsequent ranges derive it from the
+          previous <code>end</code>, so just specify <code>end</code>.
         </p>
       </section>
 
@@ -385,10 +387,13 @@ export default async function ReferenceRangeDocsPage() {
           <h3 id="referencerange">ReferenceRange</h3>
           <p>
             <code>ranges</code> is an array of{" "}
-            <code>{"{ start, end, color, label? }"}</code> entries with{" "}
+            <code>{"{ start?, end, color, label? }"}</code> entries with{" "}
             <code>[start, end)</code> boundaries (last range inclusive on both
-            sides). In development, the component logs a console warning if
-            adjacent ranges leave a gap or overlap.
+            sides). Only the first range requires <code>start</code>; later
+            ranges derive it from the previous <code>end</code>. If you do
+            provide <code>start</code> on a later range and it doesn&apos;t
+            match, the component throws a runtime error — gaps and overlaps are
+            not silently rendered.
           </p>
           <PropsTable rows={referenceRangeProps} />
         </div>

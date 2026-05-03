@@ -136,3 +136,8 @@ Homepage cards show static PNG screenshots instead of live components, to avoid 
 - `--all` exists for rare cases like a preview layout redesign or Chromium update — not for routine use.
 - The script auto-discovers components from `app/docs/` — any folder with an `examples/basic.tsx` is captured.
 - **After modifying any `app/docs/<name>/examples/basic.tsx`**, run `pnpm capture-previews <name>` and stage the updated PNG. The pre-commit hook (`.git/hooks/pre-commit`) enforces this — it will block a commit that stages `basic.tsx` without the corresponding PNG.
+
+
+## Philosophy
+
+1. Showing the imperfect but real side of things. Show what they look like when they break.

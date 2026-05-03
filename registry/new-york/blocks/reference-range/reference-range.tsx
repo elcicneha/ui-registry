@@ -11,12 +11,29 @@ import {
   TooltipTrigger,
 } from "@/registry/new-york/ui/tooltip"
 
-export type ReferenceRangeItem = {
+/** First segment in a ranges array — `start` is required (use `null` for open-ended). */
+export type ReferenceRangeFirst = {
   start: number | null
   end: number | null
   color: string
   label?: string
 }
+
+/**
+ * Any segment after the first — `start` is derived from the previous segment's `end`
+ * and should be omitted. You may provide it as an explicit assertion; the component
+ * will throw if it doesn't match.
+ */
+export type ReferenceRangeRest = {
+  start?: number | null
+  end: number | null
+  color: string
+  label?: string
+}
+
+/** Union of both segment shapes — use `ReferenceRangeFirst` / `ReferenceRangeRest` when
+ *  you need to reference a specific position. */
+export type ReferenceRangeItem = ReferenceRangeFirst | ReferenceRangeRest
 
 export type PointerRenderContext = {
   value: number
@@ -34,7 +51,32 @@ export type SegmentRenderContext = {
 }
 
 export interface ReferenceRangeProps {
-  ranges: ReferenceRangeItem[]
+  /**
+   * Ordered list of range segments from left to right.
+   *
+   * Only the **first** segment requires `start` (use `null` for open-ended left).
+   * Every subsequent segment derives its start from the previous segment's `end` —
+   * omit `start` entirely for cleaner code. Providing `start` on a later segment is
+   * treated as an assertion and throws if it doesn't match.
+   *
+   * @example
+   * // Basic closed ranges — only the first segment sets `start`:
+   * [
+   *   { start: 0,    end: 18.5, color: "#22c55e", label: "Underweight" },
+   *   {               end: 25,   color: "#84cc16", label: "Normal"      },
+   *   {               end: 30,   color: "#eab308", label: "Overweight"  },
+   *   {               end: null, color: "#ef4444", label: "Obese"       },
+   * ]
+   *
+   * @example
+   * // Open-ended on both sides:
+   * [
+   *   { start: null, end: 18.5, color: "#22c55e" },
+   *   {               end: 25,  color: "#84cc16"  },
+   *   {               end: null, color: "#ef4444" },
+   * ]
+   */
+  ranges: [ReferenceRangeFirst, ...ReferenceRangeRest[]]
   value: number
   unit?: string
   distribution?: "proportional" | "equal"
@@ -98,42 +140,45 @@ function ReferenceRange({
   renderSegment,
   className,
 }: ReferenceRangeProps) {
-  if (process.env.NODE_ENV !== "production") {
-    for (let i = 1; i < ranges.length; i++) {
-      const prev = ranges[i - 1].end
-      const curr = ranges[i].start
-      if (prev != null && curr != null && prev !== curr) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[ReferenceRange] gap or overlap between ranges[${i - 1}].end (${prev}) and ranges[${i}].start (${curr}).`
-        )
-      }
+  // Stitch ranges: derive start from previous end when omitted; throw if explicitly
+  // provided but mismatched — this is an assertion, not a layout hint.
+  const stitched: ReferenceRangeFirst[] = ranges.map((r, i) => {
+    if (i === 0) return r as ReferenceRangeFirst
+    const prevEnd = ranges[i - 1].end
+    if (r.start === undefined || r.start === null) {
+      return { ...r, start: prevEnd } as ReferenceRangeFirst
     }
-  }
+    if (prevEnd !== null && r.start !== prevEnd) {
+      throw new Error(
+        `[ReferenceRange] Invalid \`ranges\` prop: ranges[${i}].start is ${r.start}, expected ${prevEnd} (ranges[${i - 1}].end). Omit \`start\` on ranges[${i}] to derive it automatically.`
+      )
+    }
+    return r as ReferenceRangeFirst
+  })
 
   // Resolve visual bounds using avg closed-segment width as the baseline
   // for open-ended bookends.
-  const closedWidths = ranges
+  const closedWidths = stitched
     .map((r) => (r.start != null && r.end != null ? r.end - r.start : null))
     .filter((w): w is number => w != null)
   const avgClosedWidth = closedWidths.length
     ? closedWidths.reduce((a, b) => a + b, 0) / closedWidths.length
     : 1
 
-  type Resolved = ReferenceRangeItem & {
+  type Resolved = ReferenceRangeFirst & {
     vStart: number
     vEnd: number
     isOpenStart: boolean
     isOpenEnd: boolean
   }
 
-  const resolved: Resolved[] = ranges.map((r, i) => {
+  const resolved: Resolved[] = stitched.map((r, i) => {
     const isOpenStart = r.start == null
     const isOpenEnd = r.end == null
     let vStart = r.start ?? 0
     let vEnd = r.end ?? 0
     if (isOpenStart) {
-      const anchor = r.end ?? ranges[i + 1]?.start ?? 0
+      const anchor = r.end ?? stitched[i + 1]?.start ?? 0
       vStart = anchor - avgClosedWidth
     }
     if (isOpenEnd) {
@@ -169,10 +214,10 @@ function ReferenceRange({
   const domainSpan = Math.max(domainMax - domainMin, 1)
 
   const findRangeIndex = (v: number) => {
-    for (let i = 0; i < ranges.length; i++) {
-      const r = ranges[i]
+    for (let i = 0; i < stitched.length; i++) {
+      const r = stitched[i]
       const isFirst = i === 0
-      const isLast = i === ranges.length - 1
+      const isLast = i === stitched.length - 1
       // Use the resolved (post-stretch) bounds for bookends so overflow values
       // map into the stretched first/last segment instead of returning -1.
       const lo = isFirst ? resolved[0].vStart : (r.start ?? -Infinity)
@@ -232,8 +277,8 @@ function ReferenceRange({
     return `calc(${frac * 100}% ${sign} ${Math.abs(pxPart)}px)`
   }
 
-  const pointerIndex = clamp(findRangeIndex(value), 0, ranges.length - 1)
-  const pointerRange = ranges[pointerIndex]
+  const pointerIndex = clamp(findRangeIndex(value), 0, stitched.length - 1)
+  const pointerRange = stitched[pointerIndex]
   const pointerColor = pointerRange.color
   const pointerLeft = valueToCalcLeft(value)
   const pointerPercent = valueToCumulativeFraction(value).frac * 100
@@ -241,12 +286,12 @@ function ReferenceRange({
   let ticks: number[] = []
   if (tickLabels === "boundaries") {
     const set = new Set<number>()
-    for (const r of ranges) {
+    for (const r of stitched) {
       if (r.start != null) set.add(r.start)
       if (r.end != null) set.add(r.end)
     }
-    const first = ranges[0]
-    const last = ranges[ranges.length - 1]
+    const first = stitched[0]
+    const last = stitched[stitched.length - 1]
     if (first.start != null) set.delete(first.start)
     if (last.end != null) set.delete(last.end)
     ticks = [...set].sort((a, b) => a - b)
@@ -402,7 +447,7 @@ function ReferenceRange({
               return (
                 <React.Fragment key={i}>
                   {renderSegment({
-                    range: ranges[i],
+                    range: stitched[i],
                     index: i,
                     widthPercent,
                     isOpenStart: r.isOpenStart,
