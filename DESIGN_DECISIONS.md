@@ -4,6 +4,23 @@ A running log of architectural and product decisions. Each entry: what we decide
 
 ---
 
+## 2026-05-04 — `reference-range` adds `minSegmentWidth` with pixel-accurate pointer math
+
+**Decision.** Added a `minSegmentWidth?: number | string` prop to `ReferenceRange` (default `"1.25rem"`). Tiny segments are pinned to the floor and the deficit is redistributed proportionally across the rest. The pointer is positioned against each segment's actual rendered width — not the original numeric proportion — so it always lands inside the correct segment. A 2px-per-side inset is applied symmetrically to each segment so the pointer stays monotonic (value+1 always moves it forward) and never sits flush against a segment edge.
+
+**Context.** The legacy positioning was `((value - min) / (max - min)) * 100%` — a single global percentage. That worked because segment widths were also a percentage of the numeric range, so visual position == numeric position. The moment any segment is forced to a min-width, that equivalence breaks: a tiny numeric segment forced to render at 24px occupies more visual space than its numeric share, and the global-percentage pointer lands in the wrong place.
+
+**Options considered.**
+- **A. Math-based (chosen).** We already measure `barWidth` for the mask cutout. A pure `distributeWidths(fractions, totalPx, minPx)` solver computes the pinned widths once per render; pointer/tick positions are derived from those widths in pixels. No new ResizeObserver, no DOM measurement of children, deterministic and unit-testable.
+- **B. CSS `min-width` + DOM measurement.** Let CSS do the floor via `min-width: Xpx; flex: 1 N`, then measure each segment with a per-child ResizeObserver to know where the pointer goes. Adds N observers, forces layout reads, composes badly with any width animation.
+- **C. Snap boundary values inward by 5% of segment.** First attempt at the "value at boundary should sit inside the segment" requirement. Broke monotonicity — value 200 jumped to 5% in, but value 201 (natural local 0.3%) sat behind it. Replaced with a per-side pixel inset that remaps each segment's usable area.
+
+**Why.** Approach A keeps the per-instance perf profile identical to today (still 2 ResizeObservers, still 1 re-render per bar resize) and adds only a constant-factor O(N) pass. The CSS length input (`"1.5rem"`, `"2em"`, `"5%"`, `clamp(...)`) is resolved at runtime via a hidden zero-height sibling whose width is observed — so consumers can express the floor in any unit they want and `em`/`rem`/`%` honor the host's font and container.
+
+**Related files.** `registry/new-york/blocks/reference-range/reference-range.tsx`, `app/docs/reference-range/examples/min-segment-width.tsx`, `app/docs/reference-range/page.tsx`.
+
+---
+
 ## 2026-04-27 — `input-phone` no longer strips `+cc` on blur
 
 **Decision.** Removed the blur-time `stripCountryCode` hack (and its sibling autofill stripper) from `input-phone.tsx`. The input now always shows the library's native international format (e.g. `+1 (234) 320-3423`) regardless of focus state. `PhoneInputField` is back to a thin forwardRef wrapping the `<input>`; only the modifier+delete keydown guard remains.

@@ -14,10 +14,10 @@ export default function CustomFormattingExample() {
         formatTick={formatMs}
         ranges={[
           { start: 0, end: 200, color: "var(--range-5)" },
-          { start: 200, end: 500, color: "var(--range-4)" },
-          { start: 500, end: 1000, color: "var(--range-3)" },
-          { start: 1000, end: 3000, color: "var(--range-2)" },
-          { start: 3000, end: null, color: "var(--range-1)" },
+          { start: 200, end: 700, color: "var(--range-4)" },
+          { start: 700, end: 1000, color: "var(--range-3)" },
+          { start: 1000, end: 1500, color: "var(--range-2)" },
+          { start: 1500, end: null, color: "var(--range-1)" },
         ]}
       />
     </div>

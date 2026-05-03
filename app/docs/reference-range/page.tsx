@@ -20,6 +20,7 @@ import OpenEndedExample from "./examples/open-ended"
 import LabeledZonesExample from "./examples/labeled-zones"
 import CustomFormattingExample from "./examples/custom-formatting"
 import CustomPointerExample from "./examples/custom-pointer"
+import MinSegmentWidthExample from "./examples/min-segment-width"
 
 export const metadata: Metadata = {
   title: "Reference Range",
@@ -56,6 +57,13 @@ const referenceRangeProps: PropRow[] = [
     default: '"proportional"',
     description:
       "Proportional sizes each segment by its numeric width. Equal gives every segment the same width regardless of numeric range.",
+  },
+  {
+    name: "minSegmentWidth",
+    type: "number | string",
+    default: '"1.25rem"',
+    description:
+      "Floor for each segment's rendered width. Accepts any CSS length (rem, em, %, clamp(), etc.) or a number (px). Segments below the floor are pinned and the deficit is redistributed proportionally; the pointer is positioned against the actual rendered widths so it always lands inside the correct segment. Pass 0 to disable.",
   },
   {
     name: "showValue",
@@ -206,6 +214,7 @@ export default async function ReferenceRangeDocsPage() {
     labeledZonesCode,
     customFormattingCode,
     customPointerCode,
+    minSegmentWidthCode,
   ] = await Promise.all([
     loadManualSource(),
     loadExampleSource("app/docs/reference-range/examples/basic.tsx"),
@@ -214,6 +223,7 @@ export default async function ReferenceRangeDocsPage() {
     loadExampleSource("app/docs/reference-range/examples/labeled-zones.tsx"),
     loadExampleSource("app/docs/reference-range/examples/custom-formatting.tsx"),
     loadExampleSource("app/docs/reference-range/examples/custom-pointer.tsx"),
+    loadExampleSource("app/docs/reference-range/examples/min-segment-width.tsx"),
   ])
 
   const manualSourceHtml = await highlightCode(manualSource, "tsx")
@@ -350,6 +360,21 @@ export default async function ReferenceRangeDocsPage() {
             code={labeledZonesCode}
           >
             <LabeledZonesExample />
+          </DocExample>
+
+          <DocExample
+            title="Minimum segment width"
+            description={
+              <>
+                Segments below <code>minSegmentWidth</code> get pinned to it;
+                the deficit is redistributed across the rest. The pointer
+                follows the actual rendered widths, so it always lands inside
+                the correct segment. Accepts any CSS length or a number (px).
+              </>
+            }
+            code={minSegmentWidthCode}
+          >
+            <MinSegmentWidthExample />
           </DocExample>
 
           <DocExample

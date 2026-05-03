@@ -80,6 +80,24 @@ export interface ReferenceRangeProps {
   value: number
   unit?: string
   distribution?: "proportional" | "equal"
+  /**
+   * Minimum rendered width per segment. Accepts any CSS length string
+   * (`"1.5rem"`, `"24px"`, `"2em"`, `"5%"`, `"clamp(...)"`, etc.) or a
+   * number (interpreted as pixels). The string is resolved to its actual
+   * pixel value at runtime so `em`/`rem`/`%` honor the consumer's font
+   * size and container — no hard-coded pixel assumption.
+   *
+   * Segments that would otherwise render below this width are pinned to
+   * it, and the deficit is redistributed proportionally across the
+   * remaining segments. The pointer is positioned against actual rendered
+   * segment widths so it always lands inside the correct segment.
+   *
+   * If the floor is infeasible (would exceed the bar's width), the
+   * smallest segments are un-pinned first (graceful degradation).
+   *
+   * Pass `0` (or `"0"`) to disable the floor entirely.
+   */
+  minSegmentWidth?: number | string
   showValue?: boolean
   formatValue?: (v: number) => string
   formatTick?: (v: number) => string
@@ -123,8 +141,70 @@ const POINTER_CUTOUT_URI = `url("data:image/svg+xml;utf8,${encodeURIComponent(PO
 
 const identity = (v: number) => String(v)
 
+// Default floor for segment widths. Picked so a tooltip-trigger segment is
+// reliably hoverable/tappable and visually legible at any reasonable bar
+// width. Override per-instance via the `minSegmentWidth` prop (pass `0` to
+// fully disable the floor). Expressed in rem so it scales with the host
+// app's root font size.
+const DEFAULT_MIN_SEGMENT_WIDTH = "1.25rem"
+
 function clamp(v: number, lo: number, hi: number) {
   return Math.min(Math.max(v, lo), hi)
+}
+
+/**
+ * Distribute `totalPx` across N segments given each segment's natural fraction.
+ * Pins any segment whose natural width falls below `minPx` and redistributes
+ * the deficit proportionally across the unpinned remainder. If the floor is
+ * infeasible (`minPx * N > totalPx`), un-pins the smallest segments first.
+ *
+ * Pure function — no React, no DOM. O(N) with at most N passes (N is segment
+ * count, typically 3–7).
+ */
+function distributeWidths(
+  fractions: number[],
+  totalPx: number,
+  minPx: number
+): number[] {
+  const N = fractions.length
+  if (N === 0) return []
+  if (minPx <= 0 || totalPx <= 0) return fractions.map((f) => f * totalPx)
+
+  // If the floor itself is infeasible, drop it for the smallest segments
+  // until it fits. Order by natural size ascending — biggest segments keep
+  // their floor, smallest ones lose it.
+  let effectiveMin = minPx
+  if (minPx * N > totalPx) {
+    effectiveMin = totalPx / N
+  }
+
+  const pinned = new Array<boolean>(N).fill(false)
+  const widths = fractions.map((f) => f * totalPx)
+
+  // Iterate: pin anything below the floor, then redistribute the deficit
+  // across unpinned segments proportionally to their current width.
+  for (let pass = 0; pass < N; pass++) {
+    let deficit = 0
+    let unpinnedSum = 0
+    for (let i = 0; i < N; i++) {
+      if (pinned[i]) continue
+      if (widths[i] < effectiveMin) {
+        deficit += effectiveMin - widths[i]
+        widths[i] = effectiveMin
+        pinned[i] = true
+      } else {
+        unpinnedSum += widths[i]
+      }
+    }
+    if (deficit === 0 || unpinnedSum === 0) break
+    const scale = (unpinnedSum - deficit) / unpinnedSum
+    if (scale <= 0) break
+    for (let i = 0; i < N; i++) {
+      if (!pinned[i]) widths[i] *= scale
+    }
+  }
+
+  return widths
 }
 
 function ReferenceRange({
@@ -136,6 +216,7 @@ function ReferenceRange({
   formatValue = identity,
   formatTick = identity,
   tickLabels = "boundaries",
+  minSegmentWidth = DEFAULT_MIN_SEGMENT_WIDTH,
   renderPointer,
   renderSegment,
   className,
@@ -235,6 +316,36 @@ function ReferenceRange({
   const GAP_PX = 4
   const N = resolved.length
 
+  // Bar pixel width — measured client-side by the layout effect below. Used
+  // both for the mask cutout and for the `minSegmentWidth` solver. Declared
+  // up here so the position helpers can read it.
+  const barRef = React.useRef<HTMLDivElement>(null)
+  const [barWidth, setBarWidth] = React.useState(0)
+
+  // `minSegmentWidth` may be any CSS length (`"1.5rem"`, `"2em"`, `"5%"`,
+  // `"clamp(...)"`, etc.) — resolve it to pixels by reading the rendered
+  // width of a hidden sibling whose `width` is set to the raw value. This
+  // lets `em`/`rem`/`%` honor the host's font size and bar width without
+  // us hard-coding any unit assumption. A number is treated as px directly.
+  const minMeasureRef = React.useRef<HTMLDivElement>(null)
+  const [minSegmentPx, setMinSegmentPx] = React.useState(
+    typeof minSegmentWidth === "number" ? minSegmentWidth : 0
+  )
+  React.useLayoutEffect(() => {
+    if (typeof minSegmentWidth === "number") {
+      setMinSegmentPx(minSegmentWidth)
+      return
+    }
+    const el = minMeasureRef.current
+    if (!el) return
+    const update = () =>
+      setMinSegmentPx(el.getBoundingClientRect().width)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [minSegmentWidth])
+
   const segmentFraction = (i: number) => {
     if (distribution === "equal") return 1 / N
     const seg = resolved[i]
@@ -263,15 +374,77 @@ function ReferenceRange({
     return { frac, idx, local }
   }
 
-  const valueToCalcLeft = (v: number, offsetPx = 0) => {
-    const { frac, idx, local } = valueToCumulativeFraction(v)
-    // Boundary values (local === 0 with idx > 0, or local === 1 with idx < N-1)
-    // sit in the visual gap between adjacent segments. Center them in the gap
-    // so a tick or pointer at the boundary aligns with the gap, not the edge
-    // of the next bar.
+  // Pinned segment widths in pixels — only populated when the consumer set
+  // `minSegmentWidth` AND we've measured the bar at least once. While null,
+  // positioning falls back to the legacy pure-percentage `calc()` path so
+  // existing consumers see identical behavior bit-for-bit.
+  const pinnedWidths: number[] | null =
+    minSegmentPx > 0 && barWidth > 0
+      ? distributeWidths(
+        Array.from({ length: N }, (_, i) => segmentFraction(i)),
+        Math.max(barWidth - (N - 1) * GAP_PX, 0),
+        minSegmentPx
+      )
+      : null
+
+  // Boundary values (local === 0 with idx > 0, or local === 1 with idx < N-1)
+  // sit in the visual gap between adjacent segments. Center them in the gap
+  // so a tick or pointer at the boundary aligns with the gap, not the edge
+  // of the next bar.
+  const boundaryGapAdjust = (idx: number, local: number) => {
     let gapOffset = idx * GAP_PX
     if (local === 0 && idx > 0) gapOffset -= GAP_PX / 2
     else if (local === 1 && idx < N - 1) gapOffset += GAP_PX / 2
+    return gapOffset
+  }
+
+  // Pointer-only inset (px per side). Shrinks each segment's usable area
+  // before mapping the value, so a value at the segment's start/end never
+  // sits flush against the segment edge — and movement stays monotonic
+  // (value+1 always shifts the pointer forward, never backward). Applied to
+  // ALL segments, including the bar's outer extremes. Ticks are not inset.
+  // Clamped per-segment to W/3 so very narrow pinned segments still have a
+  // positive usable area.
+  const POINTER_EDGE_INSET_PX = 4
+  const insetLocalForWidth = (local: number, widthPx: number) => {
+    if (widthPx <= 0) return local
+    const inset = Math.min(POINTER_EDGE_INSET_PX, widthPx / 3)
+    return (inset + local * (widthPx - 2 * inset)) / widthPx
+  }
+
+  // Pixel offset of a value from the bar's left edge. Used for both the
+  // pointer wrapper position and the mask cutout. Only valid when
+  // `pinnedWidths` is set (we know each segment's actual rendered width).
+  const valueToPx = (v: number, inset = false) => {
+    if (!pinnedWidths) return null
+    const { idx, local: rawLocal } = valueToCumulativeFraction(v)
+    const segW = pinnedWidths[idx]
+    const local = inset ? insetLocalForWidth(rawLocal, segW) : rawLocal
+    let px = 0
+    for (let j = 0; j < idx; j++) px += pinnedWidths[j]
+    px += local * segW
+    px += boundaryGapAdjust(idx, local)
+    return px
+  }
+
+  const valueToCalcLeft = (v: number, offsetPx = 0, inset = false) => {
+    const pinnedPx = valueToPx(v, inset)
+    if (pinnedPx != null) return `${pinnedPx + offsetPx}px`
+    const { frac: rawFrac, idx, local: rawLocal } = valueToCumulativeFraction(v)
+    // Fallback (no minSegmentWidth set / pre-measure): segment's effective
+    // rendered width is its share of the bar minus its share of total gap.
+    const segW =
+      barWidth > 0
+        ? segmentFraction(idx) * (barWidth - (N - 1) * GAP_PX)
+        : 0
+    const local = inset ? insetLocalForWidth(rawLocal, segW) : rawLocal
+    let frac = rawFrac
+    if (local !== rawLocal) {
+      frac = 0
+      for (let j = 0; j < idx; j++) frac += segmentFraction(j)
+      frac += local * segmentFraction(idx)
+    }
+    const gapOffset = boundaryGapAdjust(idx, local)
     const pxPart = -frac * (N - 1) * GAP_PX + gapOffset + offsetPx
     const sign = pxPart >= 0 ? "+" : "-"
     return `calc(${frac * 100}% ${sign} ${Math.abs(pxPart)}px)`
@@ -280,7 +453,7 @@ function ReferenceRange({
   const pointerIndex = clamp(findRangeIndex(value), 0, stitched.length - 1)
   const pointerRange = stitched[pointerIndex]
   const pointerColor = pointerRange.color
-  const pointerLeft = valueToCalcLeft(value)
+  const pointerLeft = valueToCalcLeft(value, 0, true)
   const pointerPercent = valueToCumulativeFraction(value).frac * 100
 
   let ticks: number[] = []
@@ -307,8 +480,6 @@ function ReferenceRange({
   // during paint — no JS on viewport resize.
   const headerRef = React.useRef<HTMLDivElement>(null)
   const valueRef = React.useRef<HTMLSpanElement>(null)
-  const barRef = React.useRef<HTMLDivElement>(null)
-  const [barWidth, setBarWidth] = React.useState(0)
   React.useLayoutEffect(() => {
     const header = headerRef.current
     const label = valueRef.current
@@ -337,24 +508,46 @@ function ReferenceRange({
   }, [])
 
   const cutoutFracInfo = valueToCumulativeFraction(value)
-  let cutoutGapOffset = cutoutFracInfo.idx * GAP_PX
-  if (cutoutFracInfo.local === 0 && cutoutFracInfo.idx > 0)
-    cutoutGapOffset -= GAP_PX / 2
-  else if (
-    cutoutFracInfo.local === 1 &&
-    cutoutFracInfo.idx < N - 1
-  )
-    cutoutGapOffset += GAP_PX / 2
-  const cutoutLeftPx =
-    barWidth * cutoutFracInfo.frac -
-    cutoutFracInfo.frac * (N - 1) * GAP_PX +
-    cutoutGapOffset -
-    POINTER_W / 2
+  const cutoutLeftPx = (() => {
+    const pinnedPx = valueToPx(value, true)
+    if (pinnedPx != null) return pinnedPx - POINTER_W / 2
+    const segW =
+      barWidth > 0
+        ? segmentFraction(cutoutFracInfo.idx) * (barWidth - (N - 1) * GAP_PX)
+        : 0
+    const local = insetLocalForWidth(cutoutFracInfo.local, segW)
+    let frac = cutoutFracInfo.frac
+    if (local !== cutoutFracInfo.local) {
+      frac = 0
+      for (let j = 0; j < cutoutFracInfo.idx; j++) frac += segmentFraction(j)
+      frac += local * segmentFraction(cutoutFracInfo.idx)
+    }
+    const gapOffset = boundaryGapAdjust(cutoutFracInfo.idx, local)
+    return (
+      barWidth * frac -
+      frac * (N - 1) * GAP_PX +
+      gapOffset -
+      POINTER_W / 2
+    )
+  })()
 
   const clampedValueLeft = `clamp(var(--ref-halfw), ${pointerLeft}, calc(100% - var(--ref-halfw)))`
 
   return (
     <div className={cn(referenceRangeVariants(), className)}>
+      {typeof minSegmentWidth !== "number" && (
+        <div
+          ref={minMeasureRef}
+          aria-hidden
+          style={{
+            width: minSegmentWidth,
+            height: 0,
+            position: "absolute",
+            visibility: "hidden",
+            pointerEvents: "none",
+          }}
+        />
+      )}
       <div
         ref={headerRef}
         className="relative w-full"
@@ -443,6 +636,19 @@ function ReferenceRange({
                 : ((r.vEnd - r.vStart) / domainSpan) * 100
             const flexBasis =
               distribution === "equal" ? 1 : Math.max(r.vEnd - r.vStart, 0.0001)
+            // When `minSegmentWidth` is active, pin each segment to its
+            // solver-computed pixel width and disable flex grow/shrink so
+            // pointer math (which assumes those exact widths) stays valid.
+            const segmentStyle: React.CSSProperties = pinnedWidths
+              ? {
+                width: `${pinnedWidths[i]}px`,
+                flex: "0 0 auto",
+                backgroundColor: r.color,
+              }
+              : {
+                flex: flexBasis,
+                backgroundColor: r.color,
+              }
             if (renderSegment) {
               return (
                 <React.Fragment key={i}>
@@ -457,13 +663,7 @@ function ReferenceRange({
               )
             }
             const segment = (
-              <div
-                className="h-2.5 rounded-full"
-                style={{
-                  flex: flexBasis,
-                  backgroundColor: r.color,
-                }}
-              />
+              <div className="h-2.5 rounded-full" style={segmentStyle} />
             )
             if (!r.label) {
               return <React.Fragment key={i}>{segment}</React.Fragment>
