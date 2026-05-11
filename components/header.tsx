@@ -21,7 +21,7 @@ export function Header() {
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" asChild>
             <a
-              href="https://github.com/elcicneha"
+              href="https://github.com/elcicneha/ui-registry"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"

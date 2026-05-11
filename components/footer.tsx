@@ -17,7 +17,7 @@ export function Footer() {
         </p>
         <div className="flex items-center gap-4">
           <a
-            href="https://github.com/elcicneha"
+            href="https://github.com/elcicneha/ui-registry"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
